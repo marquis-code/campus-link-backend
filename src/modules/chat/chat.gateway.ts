@@ -8,67 +8,161 @@ import {
   OnGatewayDisconnect,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { UseGuards } from '@nestjs/common';
-import { WsJwtAuthGuard } from '../auth/guards/ws-jwt.guard';
+import { Logger } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { ChatService } from './chat.service';
 import { SendMessageDto } from './dto/chat.dto';
 
 @WebSocketGateway({
-  cors: {
-    origin: '*',
-  },
+  cors: { origin: '*' },
+  namespace: '/chat',
 })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server: Server;
 
-  constructor(private readonly chatService: ChatService) {}
+  private readonly logger = new Logger(ChatGateway.name);
+  private userSockets = new Map<string, Set<string>>(); // userId -> Set<socketId>
+  private socketUsers = new Map<string, string>(); // socketId -> userId
+
+  constructor(
+    private readonly chatService: ChatService,
+    private jwtService: JwtService,
+  ) {}
 
   async handleConnection(client: Socket) {
-    // console.log('Client connected:', client.id);
+    try {
+      const token = client.handshake.auth?.token || client.handshake.query?.token;
+      if (!token) {
+        client.disconnect();
+        return;
+      }
+
+      const decoded = this.jwtService.verify(token as string);
+      const userId = decoded.sub;
+      (client as any).userId = userId;
+      this.socketUsers.set(client.id, userId);
+
+      // Track user sessions
+      if (!this.userSockets.has(userId)) {
+        this.userSockets.set(userId, new Set());
+      }
+      this.userSockets.get(userId)!.add(client.id);
+
+      // Auto-join user's personal room for DMs
+      client.join(`user_${userId}`);
+
+      // Broadcast presence
+      this.server.emit('presence', { userId, online: true });
+      this.logger.log(`Chat: User ${userId} connected`);
+    } catch (e) {
+      client.disconnect();
+    }
   }
 
   handleDisconnect(client: Socket) {
-    // console.log('Client disconnected:', client.id);
+    const userId = this.socketUsers.get(client.id);
+    if (!userId) return;
+
+    this.socketUsers.delete(client.id);
+    const sessions = this.userSockets.get(userId);
+    if (sessions) {
+      sessions.delete(client.id);
+      if (sessions.size === 0) {
+        this.userSockets.delete(userId);
+        this.server.emit('presence', { userId, online: false });
+      }
+    }
   }
 
-  @SubscribeMessage('join_room')
-  handleJoinRoom(@MessageBody() conversationId: string, @ConnectedSocket() client: Socket) {
-    client.join(conversationId);
-    return { event: 'joined', room: conversationId };
+  @SubscribeMessage('join_conversation')
+  handleJoinRoom(
+    @MessageBody() data: { conversationId: string },
+    @ConnectedSocket() client: Socket,
+  ) {
+    client.join(`conv_${data.conversationId}`);
+    this.logger.log(`User joined conversation ${data.conversationId}`);
+    return { event: 'joined', room: data.conversationId };
   }
 
-  @SubscribeMessage('leave_room')
-  handleLeaveRoom(@MessageBody() conversationId: string, @ConnectedSocket() client: Socket) {
-    client.leave(conversationId);
-    return { event: 'left', room: conversationId };
+  @SubscribeMessage('leave_conversation')
+  handleLeaveRoom(
+    @MessageBody() data: { conversationId: string },
+    @ConnectedSocket() client: Socket,
+  ) {
+    client.leave(`conv_${data.conversationId}`);
+    return { event: 'left', room: data.conversationId };
   }
 
   @SubscribeMessage('send_message')
-  @UseGuards(WsJwtAuthGuard)
   async handleMessage(
-    @ConnectedSocket() client: any,
+    @ConnectedSocket() client: Socket,
     @MessageBody() dto: SendMessageDto,
   ) {
-    const userId = client.user._id;
+    const userId = (client as any).userId;
+    if (!userId) return;
+
     const message = await this.chatService.sendMessage(userId, dto);
-    
-    // Broadcast to the room
-    this.server.to(dto.conversationId).emit('new_message', message);
-    
-    // Also notify participants who are not in the room (aggressive notification)
-    // This part can be expanded to trigger push notifications/emails
+
+    // Broadcast to all users in the conversation room
+    this.server.to(`conv_${dto.conversationId}`).emit('new_message', message);
+
+    // Notify participants not in the room
+    const conversation = await this.chatService.getConversationById(dto.conversationId);
+    if (conversation) {
+      for (const participant of conversation.participants) {
+        const pId = participant.toString();
+        if (pId !== userId) {
+          // Send to their personal room (they may not be in the conversation room)
+          this.server.to(`user_${pId}`).emit('message_notification', {
+            conversationId: dto.conversationId,
+            message,
+            senderName: (message as any).sender?.name || 'Someone',
+          });
+        }
+      }
+    }
+
     return message;
   }
 
   @SubscribeMessage('typing')
   handleTyping(
-    @ConnectedSocket() client: any,
+    @ConnectedSocket() client: Socket,
     @MessageBody() data: { conversationId: string; isTyping: boolean },
   ) {
-    client.to(data.conversationId).emit('user_typing', {
-      userId: client.user?._id,
+    const userId = (client as any).userId;
+    if (!userId) return;
+
+    client.to(`conv_${data.conversationId}`).emit('user_typing', {
+      userId,
+      conversationId: data.conversationId,
       isTyping: data.isTyping,
     });
+  }
+
+  @SubscribeMessage('mark_read')
+  async handleMarkRead(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { conversationId: string; messageId: string },
+  ) {
+    const userId = (client as any).userId;
+    if (!userId) return;
+
+    await this.chatService.markAsRead(data.messageId, userId);
+
+    // Notify the sender that their message was read
+    this.server.to(`conv_${data.conversationId}`).emit('message_read', {
+      messageId: data.messageId,
+      readBy: userId,
+      conversationId: data.conversationId,
+    });
+  }
+
+  /**
+   * Check if user is online in chat namespace.
+   */
+  isUserOnline(userId: string): boolean {
+    return this.userSockets.has(userId) && (this.userSockets.get(userId)?.size || 0) > 0;
   }
 }

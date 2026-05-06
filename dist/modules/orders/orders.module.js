@@ -15,7 +15,7 @@ const order_schema_1 = require("../../schemas/order.schema");
 const product_schema_1 = require("../../schemas/product.schema");
 const referral_schema_1 = require("../../schemas/referral.schema");
 const earning_schema_1 = require("../../schemas/earning.schema");
-const notification_schema_1 = require("../../schemas/notification.schema");
+const notifications_module_1 = require("../notifications/notifications.module");
 let OrdersModule = class OrdersModule {
 };
 exports.OrdersModule = OrdersModule;
@@ -27,8 +27,8 @@ exports.OrdersModule = OrdersModule = __decorate([
                 { name: product_schema_1.Product.name, schema: product_schema_1.ProductSchema },
                 { name: referral_schema_1.Referral.name, schema: referral_schema_1.ReferralSchema },
                 { name: earning_schema_1.Earning.name, schema: earning_schema_1.EarningSchema },
-                { name: notification_schema_1.Notification.name, schema: notification_schema_1.NotificationSchema },
             ]),
+            notifications_module_1.NotificationsModule,
         ],
         controllers: [orders_controller_1.OrdersController],
         providers: [orders_service_1.OrdersService],

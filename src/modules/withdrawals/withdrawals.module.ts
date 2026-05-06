@@ -4,7 +4,7 @@ import { WithdrawalsController } from './withdrawals.controller';
 import { WithdrawalsService } from './withdrawals.service';
 import { Withdrawal, WithdrawalSchema } from '../../schemas/withdrawal.schema';
 import { User, UserSchema } from '../../schemas/user.schema';
-import { Notification, NotificationSchema } from '../../schemas/notification.schema';
+import { NotificationsModule } from '../notifications/notifications.module';
 import { EarningsModule } from '../earnings/earnings.module';
 
 @Module({
@@ -12,9 +12,9 @@ import { EarningsModule } from '../earnings/earnings.module';
     MongooseModule.forFeature([
       { name: Withdrawal.name, schema: WithdrawalSchema },
       { name: User.name, schema: UserSchema },
-      { name: Notification.name, schema: NotificationSchema },
     ]),
     EarningsModule,
+    NotificationsModule,
   ],
   controllers: [WithdrawalsController],
   providers: [WithdrawalsService],

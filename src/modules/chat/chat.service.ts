@@ -31,6 +31,10 @@ export class ChatService {
     });
   }
 
+  async getConversationById(id: string) {
+    return this.conversationModel.findById(id).exec();
+  }
+
   async getConversations(userId: string) {
     return this.conversationModel
       .find({ participants: userId })

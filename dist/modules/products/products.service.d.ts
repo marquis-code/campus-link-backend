@@ -2,10 +2,12 @@ import { Model, Types } from 'mongoose';
 import type { Cache } from 'cache-manager';
 import { Product, ProductDocument } from '../../schemas/product.schema';
 import { CreateProductDto, UpdateProductDto, UpdateProductStatusDto, ProductQueryDto } from './dto/product.dto';
+import { NotificationsService } from '../notifications/notifications.service';
 export declare class ProductsService {
     private productModel;
     private cacheManager;
-    constructor(productModel: Model<ProductDocument>, cacheManager: Cache);
+    private notificationsService;
+    constructor(productModel: Model<ProductDocument>, cacheManager: Cache, notificationsService: NotificationsService);
     create(sellerId: string, dto: CreateProductDto): Promise<(Product & import("mongoose").Document<Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
         _id: Types.ObjectId;
     }> & {

@@ -41,6 +41,9 @@ let ChatService = class ChatService {
             subject: dto.subject,
         });
     }
+    async getConversationById(id) {
+        return this.conversationModel.findById(id).exec();
+    }
     async getConversations(userId) {
         return this.conversationModel
             .find({ participants: userId })

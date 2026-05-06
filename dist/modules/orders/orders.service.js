@@ -20,7 +20,7 @@ const order_schema_1 = require("../../schemas/order.schema");
 const product_schema_1 = require("../../schemas/product.schema");
 const referral_schema_1 = require("../../schemas/referral.schema");
 const earning_schema_1 = require("../../schemas/earning.schema");
-const notification_schema_1 = require("../../schemas/notification.schema");
+const notifications_service_1 = require("../notifications/notifications.service");
 const mail_service_1 = require("../mail/mail.service");
 const paystack_service_1 = require("../../shared/services/paystack.service");
 let OrdersService = class OrdersService {
@@ -28,15 +28,15 @@ let OrdersService = class OrdersService {
     productModel;
     referralModel;
     earningModel;
-    notificationModel;
+    notificationsService;
     paystackService;
     mailService;
-    constructor(orderModel, productModel, referralModel, earningModel, notificationModel, paystackService, mailService) {
+    constructor(orderModel, productModel, referralModel, earningModel, notificationsService, paystackService, mailService) {
         this.orderModel = orderModel;
         this.productModel = productModel;
         this.referralModel = referralModel;
         this.earningModel = earningModel;
-        this.notificationModel = notificationModel;
+        this.notificationsService = notificationsService;
         this.paystackService = paystackService;
         this.mailService = mailService;
     }
@@ -97,21 +97,20 @@ let OrdersService = class OrdersService {
                 console.error('Paystack DVA creation failed', err);
             }
         }
-        await this.notificationModel.create({
-            user: product.seller,
-            title: 'New Order Received!',
-            message: `${dto.buyerName} placed an order for ${product.name}`,
-            type: notification_schema_1.NotificationType.ORDER,
-            meta: { orderId: order._id },
-        });
+        const populatedOrder = await order.populate('seller', 'name email');
+        const seller = populatedOrder.seller;
+        await this.notificationsService.notifyNewOrder(seller._id.toString(), seller.email, order._id.toString(), totalAmount);
         if (promoterId) {
-            await this.notificationModel.create({
-                user: promoterId,
-                title: 'Someone ordered through your link!',
-                message: `Your referral for ${product.name} just got an order`,
-                type: notification_schema_1.NotificationType.ORDER,
-                meta: { orderId: order._id },
-            });
+            const promoter = await this.orderModel.findById(order._id).populate('promoter', 'name email');
+            if (promoter && promoter.promoter) {
+                await this.notificationsService.create({
+                    user: promoterId.toString(),
+                    title: 'Someone ordered through your link! 🚀',
+                    message: `Your referral for ${product.name} just got an order`,
+                    type: 'order',
+                    emailAddress: promoter.promoter.email,
+                });
+            }
         }
         return this.orderModel
             .findById(order._id)
@@ -151,7 +150,7 @@ let OrdersService = class OrdersService {
         const existing = await this.earningModel.findOne({ order: order._id });
         if (existing)
             return;
-        await this.earningModel.create({
+        const earning = await this.earningModel.create({
             promoter: order.promoter,
             order: order._id,
             product: order.product,
@@ -166,13 +165,9 @@ let OrdersService = class OrdersService {
                 $inc: { orders: 1, earnings: order.commissionAmount },
             });
         }
-        await this.notificationModel.create({
-            user: order.promoter,
-            title: 'You earned a commission! 🎉',
-            message: `₦${order.commissionAmount.toLocaleString()} earned from your referral`,
-            type: notification_schema_1.NotificationType.EARNING,
-            meta: { orderId: order._id, amount: order.commissionAmount },
-        });
+        const populatedEarning = await earning.populate('promoter', 'name email');
+        const promoter = populatedEarning.promoter;
+        await this.notificationsService.notifyEarning(promoter._id.toString(), promoter.email, order.commissionAmount, order.product.name || 'a product');
     }
     async findAll(query) {
         const { status, page = 1, limit = 20 } = query;
@@ -254,12 +249,11 @@ exports.OrdersService = OrdersService = __decorate([
     __param(1, (0, mongoose_1.InjectModel)(product_schema_1.Product.name)),
     __param(2, (0, mongoose_1.InjectModel)(referral_schema_1.Referral.name)),
     __param(3, (0, mongoose_1.InjectModel)(earning_schema_1.Earning.name)),
-    __param(4, (0, mongoose_1.InjectModel)(notification_schema_1.Notification.name)),
     __metadata("design:paramtypes", [mongoose_2.Model,
         mongoose_2.Model,
         mongoose_2.Model,
         mongoose_2.Model,
-        mongoose_2.Model,
+        notifications_service_1.NotificationsService,
         paystack_service_1.PaystackService,
         mail_service_1.MailService])
 ], OrdersService);

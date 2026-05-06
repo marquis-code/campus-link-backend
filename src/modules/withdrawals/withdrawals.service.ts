@@ -7,7 +7,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Withdrawal, WithdrawalDocument, WithdrawalStatus } from '../../schemas/withdrawal.schema';
 import { User, UserDocument } from '../../schemas/user.schema';
-import { Notification, NotificationDocument, NotificationType } from '../../schemas/notification.schema';
+import { NotificationsService } from '../notifications/notifications.service';
 import { EarningsService } from '../earnings/earnings.service';
 import { CreateWithdrawalDto, UpdateWithdrawalStatusDto } from './dto/withdrawal.dto';
 
@@ -16,7 +16,7 @@ export class WithdrawalsService {
   constructor(
     @InjectModel(Withdrawal.name) private withdrawalModel: Model<WithdrawalDocument>,
     @InjectModel(User.name) private userModel: Model<UserDocument>,
-    @InjectModel(Notification.name) private notificationModel: Model<NotificationDocument>,
+    private notificationsService: NotificationsService,
     private earningsService: EarningsService,
   ) {}
 
@@ -100,20 +100,23 @@ export class WithdrawalsService {
       );
     }
 
-    const statusMessages: Record<string, string> = {
-      approved: 'Your withdrawal request has been approved! 🎉',
-      rejected: `Your withdrawal request was rejected. ${dto.adminNote || ''}`,
-      processing: 'Your withdrawal is being processed.',
-      completed: 'Your withdrawal has been completed! Check your bank account.',
-    };
+    const populatedWithdrawal = await withdrawal.populate('user', 'name email');
+    const user = populatedWithdrawal.user as any;
 
-    await this.notificationModel.create({
-      user: withdrawal.user,
-      title: 'Withdrawal Update',
-      message: statusMessages[dto.status] || 'Withdrawal status updated',
-      type: NotificationType.WITHDRAWAL,
-      meta: { withdrawalId: withdrawal._id, status: dto.status },
-    } as any);
+    if (dto.status === 'approved' || dto.status === 'completed') {
+      await this.notificationsService.notifyWithdrawalApproved(
+        user._id.toString(),
+        user.email,
+        withdrawal.amount,
+      );
+    } else if (dto.status === 'rejected') {
+      await this.notificationsService.notifyWithdrawalRejected(
+        user._id.toString(),
+        user.email,
+        withdrawal.amount,
+        dto.adminNote || 'No reason provided',
+      );
+    }
 
     return withdrawal;
   }

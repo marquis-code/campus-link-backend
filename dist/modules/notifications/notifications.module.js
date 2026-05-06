@@ -14,6 +14,7 @@ const notifications_service_1 = require("./notifications.service");
 const notification_schema_1 = require("../../schemas/notification.schema");
 const notifications_gateway_1 = require("./notifications.gateway");
 const auth_module_1 = require("../auth/auth.module");
+const mail_module_1 = require("../mail/mail.module");
 let NotificationsModule = class NotificationsModule {
 };
 exports.NotificationsModule = NotificationsModule;
@@ -24,6 +25,7 @@ exports.NotificationsModule = NotificationsModule = __decorate([
                 { name: notification_schema_1.Notification.name, schema: notification_schema_1.NotificationSchema },
             ]),
             auth_module_1.AuthModule,
+            mail_module_1.MailModule,
         ],
         controllers: [notifications_controller_1.NotificationsController],
         providers: [notifications_service_1.NotificationsService, notifications_gateway_1.NotificationsGateway],

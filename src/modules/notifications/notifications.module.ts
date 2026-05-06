@@ -5,6 +5,7 @@ import { NotificationsService } from './notifications.service';
 import { Notification, NotificationSchema } from '../../schemas/notification.schema';
 import { NotificationsGateway } from './notifications.gateway';
 import { AuthModule } from '../auth/auth.module';
+import { MailModule } from '../mail/mail.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { AuthModule } from '../auth/auth.module';
       { name: Notification.name, schema: NotificationSchema },
     ]),
     AuthModule,
+    MailModule,
   ],
   controllers: [NotificationsController],
   providers: [NotificationsService, NotificationsGateway],

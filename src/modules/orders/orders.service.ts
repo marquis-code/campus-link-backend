@@ -9,9 +9,8 @@ import { Order, OrderDocument, OrderStatus } from '../../schemas/order.schema';
 import { Product, ProductDocument } from '../../schemas/product.schema';
 import { Referral, ReferralDocument } from '../../schemas/referral.schema';
 import { Earning, EarningDocument } from '../../schemas/earning.schema';
-import { Notification, NotificationDocument, NotificationType } from '../../schemas/notification.schema';
 import { CreateOrderDto, UpdateOrderStatusDto, OrderQueryDto } from './dto/order.dto';
-
+import { NotificationsService } from '../notifications/notifications.service';
 import { MailService } from '../mail/mail.service';
 import { PaystackService } from '../../shared/services/paystack.service';
 
@@ -22,7 +21,7 @@ export class OrdersService {
     @InjectModel(Product.name) private productModel: Model<ProductDocument>,
     @InjectModel(Referral.name) private referralModel: Model<ReferralDocument>,
     @InjectModel(Earning.name) private earningModel: Model<EarningDocument>,
-    @InjectModel(Notification.name) private notificationModel: Model<NotificationDocument>,
+    private notificationsService: NotificationsService,
     private paystackService: PaystackService,
     private mailService: MailService,
   ) {}
@@ -102,24 +101,30 @@ export class OrdersService {
       }
     }
 
+    // Populate seller for notification
+    const populatedOrder = await order.populate('seller', 'name email');
+    const seller = populatedOrder.seller as any;
+
     // Notify seller about new order
-    await this.notificationModel.create({
-      user: product.seller,
-      title: 'New Order Received!',
-      message: `${dto.buyerName} placed an order for ${product.name}`,
-      type: NotificationType.ORDER,
-      meta: { orderId: order._id },
-    } as any);
+    await this.notificationsService.notifyNewOrder(
+      seller._id.toString(),
+      seller.email,
+      order._id.toString(),
+      totalAmount
+    );
 
     // Notify promoter if applicable
     if (promoterId) {
-      await this.notificationModel.create({
-        user: promoterId,
-        title: 'Someone ordered through your link!',
-        message: `Your referral for ${product.name} just got an order`,
-        type: NotificationType.ORDER,
-        meta: { orderId: order._id },
-      } as any);
+      const promoter = await this.orderModel.findById(order._id).populate('promoter', 'name email');
+      if (promoter && promoter.promoter) {
+        await this.notificationsService.create({
+          user: promoterId.toString(),
+          title: 'Someone ordered through your link! 🚀',
+          message: `Your referral for ${product.name} just got an order`,
+          type: 'order',
+          emailAddress: (promoter.promoter as any).email,
+        });
+      }
     }
 
     return this.orderModel
@@ -174,7 +179,7 @@ export class OrdersService {
     const existing = await this.earningModel.findOne({ order: order._id });
     if (existing) return;
 
-    await this.earningModel.create({
+    const earning = await this.earningModel.create({
       promoter: order.promoter,
       order: order._id,
       product: order.product,
@@ -195,13 +200,15 @@ export class OrdersService {
     }
 
     // Notify promoter about earning
-    await this.notificationModel.create({
-      user: order.promoter,
-      title: 'You earned a commission! 🎉',
-      message: `₦${order.commissionAmount.toLocaleString()} earned from your referral`,
-      type: NotificationType.EARNING,
-      meta: { orderId: order._id, amount: order.commissionAmount },
-    } as any);
+    const populatedEarning = await earning.populate('promoter', 'name email');
+    const promoter = populatedEarning.promoter as any;
+    
+    await this.notificationsService.notifyEarning(
+      promoter._id.toString(),
+      promoter.email,
+      order.commissionAmount,
+      (order.product as any).name || 'a product'
+    );
   }
 
   async findAll(query: OrderQueryDto) {

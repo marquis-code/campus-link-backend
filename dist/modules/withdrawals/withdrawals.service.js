@@ -18,17 +18,17 @@ const mongoose_1 = require("@nestjs/mongoose");
 const mongoose_2 = require("mongoose");
 const withdrawal_schema_1 = require("../../schemas/withdrawal.schema");
 const user_schema_1 = require("../../schemas/user.schema");
-const notification_schema_1 = require("../../schemas/notification.schema");
+const notifications_service_1 = require("../notifications/notifications.service");
 const earnings_service_1 = require("../earnings/earnings.service");
 let WithdrawalsService = class WithdrawalsService {
     withdrawalModel;
     userModel;
-    notificationModel;
+    notificationsService;
     earningsService;
-    constructor(withdrawalModel, userModel, notificationModel, earningsService) {
+    constructor(withdrawalModel, userModel, notificationsService, earningsService) {
         this.withdrawalModel = withdrawalModel;
         this.userModel = userModel;
-        this.notificationModel = notificationModel;
+        this.notificationsService = notificationsService;
         this.earningsService = earningsService;
     }
     async create(userId, dto) {
@@ -90,19 +90,14 @@ let WithdrawalsService = class WithdrawalsService {
         if (dto.status === 'approved' || dto.status === 'completed') {
             await this.earningsService.markEarningsAsPaid(withdrawal.user.toString(), withdrawal.amount);
         }
-        const statusMessages = {
-            approved: 'Your withdrawal request has been approved! 🎉',
-            rejected: `Your withdrawal request was rejected. ${dto.adminNote || ''}`,
-            processing: 'Your withdrawal is being processed.',
-            completed: 'Your withdrawal has been completed! Check your bank account.',
-        };
-        await this.notificationModel.create({
-            user: withdrawal.user,
-            title: 'Withdrawal Update',
-            message: statusMessages[dto.status] || 'Withdrawal status updated',
-            type: notification_schema_1.NotificationType.WITHDRAWAL,
-            meta: { withdrawalId: withdrawal._id, status: dto.status },
-        });
+        const populatedWithdrawal = await withdrawal.populate('user', 'name email');
+        const user = populatedWithdrawal.user;
+        if (dto.status === 'approved' || dto.status === 'completed') {
+            await this.notificationsService.notifyWithdrawalApproved(user._id.toString(), user.email, withdrawal.amount);
+        }
+        else if (dto.status === 'rejected') {
+            await this.notificationsService.notifyWithdrawalRejected(user._id.toString(), user.email, withdrawal.amount, dto.adminNote || 'No reason provided');
+        }
         return withdrawal;
     }
 };
@@ -111,10 +106,9 @@ exports.WithdrawalsService = WithdrawalsService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, mongoose_1.InjectModel)(withdrawal_schema_1.Withdrawal.name)),
     __param(1, (0, mongoose_1.InjectModel)(user_schema_1.User.name)),
-    __param(2, (0, mongoose_1.InjectModel)(notification_schema_1.Notification.name)),
     __metadata("design:paramtypes", [mongoose_2.Model,
         mongoose_2.Model,
-        mongoose_2.Model,
+        notifications_service_1.NotificationsService,
         earnings_service_1.EarningsService])
 ], WithdrawalsService);
 //# sourceMappingURL=withdrawals.service.js.map

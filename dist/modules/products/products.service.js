@@ -19,12 +19,15 @@ const mongoose_2 = require("mongoose");
 const cache_manager_1 = require("@nestjs/cache-manager");
 const common_2 = require("@nestjs/common");
 const product_schema_1 = require("../../schemas/product.schema");
+const notifications_service_1 = require("../notifications/notifications.service");
 let ProductsService = class ProductsService {
     productModel;
     cacheManager;
-    constructor(productModel, cacheManager) {
+    notificationsService;
+    constructor(productModel, cacheManager, notificationsService) {
         this.productModel = productModel;
         this.cacheManager = cacheManager;
+        this.notificationsService = notificationsService;
     }
     async create(sellerId, dto) {
         const product = await this.productModel.create({
@@ -136,6 +139,13 @@ let ProductsService = class ProductsService {
             .lean();
         if (!product)
             throw new common_1.NotFoundException('Product not found');
+        const seller = product.seller;
+        if (dto.status === product_schema_1.ProductStatus.ACTIVE) {
+            await this.notificationsService.notifyProductApproved(seller._id.toString(), seller.email, product.name);
+        }
+        else if (dto.status === product_schema_1.ProductStatus.REJECTED) {
+            await this.notificationsService.notifyProductRejected(seller._id.toString(), seller.email, product.name, 'Does not meet our community guidelines');
+        }
         return product;
     }
     async remove(id, userId, isAdmin) {
@@ -195,6 +205,6 @@ exports.ProductsService = ProductsService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, mongoose_1.InjectModel)(product_schema_1.Product.name)),
     __param(1, (0, common_2.Inject)(cache_manager_1.CACHE_MANAGER)),
-    __metadata("design:paramtypes", [mongoose_2.Model, Object])
+    __metadata("design:paramtypes", [mongoose_2.Model, Object, notifications_service_1.NotificationsService])
 ], ProductsService);
 //# sourceMappingURL=products.service.js.map

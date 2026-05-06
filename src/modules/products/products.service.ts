@@ -16,11 +16,14 @@ import {
   ProductQueryDto,
 } from './dto/product.dto';
 
+import { NotificationsService } from '../notifications/notifications.service';
+
 @Injectable()
 export class ProductsService {
   constructor(
     @InjectModel(Product.name) private productModel: Model<ProductDocument>,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    private notificationsService: NotificationsService,
   ) {}
 
   async create(sellerId: string, dto: CreateProductDto) {
@@ -152,6 +155,24 @@ export class ProductsService {
       .lean();
 
     if (!product) throw new NotFoundException('Product not found');
+
+    // Notify seller
+    const seller = product.seller as any;
+    if (dto.status === ProductStatus.ACTIVE) {
+      await this.notificationsService.notifyProductApproved(
+        seller._id.toString(),
+        seller.email,
+        product.name,
+      );
+    } else if (dto.status === ProductStatus.REJECTED) {
+      await this.notificationsService.notifyProductRejected(
+        seller._id.toString(),
+        seller.email,
+        product.name,
+        'Does not meet our community guidelines', // You can add a reason field to UpdateProductStatusDto later
+      );
+    }
+
     return product;
   }
 

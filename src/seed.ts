@@ -13,16 +13,47 @@ async function seed() {
 
   // Seed Campuses
   const campuses = [
-    { name: 'UNILAG', location: 'Lagos' },
-    { name: 'YABATECH', location: 'Lagos' },
-    { name: 'LASU', location: 'Lagos' },
-    { name: 'UI', location: 'Ibadan' },
-    { name: 'OAU', location: 'Ile-Ife' },
-    { name: 'UNILORIN', location: 'Ilorin' },
-    { name: 'ABU', location: 'Zaria' },
-    { name: 'UNIBEN', location: 'Benin City' },
-    { name: 'UNN', location: 'Nsukka' },
-    { name: 'FUTA', location: 'Akure' },
+    // Nigeria - South West
+    { name: 'University of Lagos (UNILAG)', location: 'Lagos, Nigeria' },
+    { name: 'Lagos State University (LASU)', location: 'Ojo, Lagos, Nigeria' },
+    { name: 'Yaba College of Technology (YABATECH)', location: 'Yaba, Lagos, Nigeria' },
+    { name: 'Obafemi Awolowo University (OAU)', location: 'Ile-Ife, Osun, Nigeria' },
+    { name: 'University of Ibadan (UI)', location: 'Ibadan, Oyo, Nigeria' },
+    { name: 'Federal University of Technology Akure (FUTA)', location: 'Akure, Ondo, Nigeria' },
+    
+    // Nigeria - South East
+    { name: 'University of Nigeria Nsukka (UNN)', location: 'Nsukka, Enugu, Nigeria' },
+    { name: 'Nnamdi Azikiwe University (UNIZIK)', location: 'Awka, Anambra, Nigeria' },
+    { name: 'Federal University of Technology Owerri (FUTO)', location: 'Owerri, Imo, Nigeria' },
+    
+    // Nigeria - South South
+    { name: 'University of Benin (UNIBEN)', location: 'Benin City, Edo, Nigeria' },
+    { name: 'University of Port Harcourt (UNIPORT)', location: 'Port Harcourt, Rivers, Nigeria' },
+    { name: 'University of Calabar (UNICAL)', location: 'Calabar, Cross River, Nigeria' },
+    
+    // Nigeria - North
+    { name: 'Ahmadu Bello University (ABU)', location: 'Zaria, Kaduna, Nigeria' },
+    { name: 'University of Ilorin (UNILORIN)', location: 'Ilorin, Kwara, Nigeria' },
+    { name: 'Bayero University Kano (BUK)', location: 'Kano, Nigeria' },
+    { name: 'University of Abuja (UNIABUJA)', location: 'Gwagwalada, Abuja, Nigeria' },
+    
+    // International - UK
+    { name: 'University of Oxford', location: 'Oxford, United Kingdom' },
+    { name: 'University of Cambridge', location: 'Cambridge, United Kingdom' },
+    { name: 'Imperial College London', location: 'London, United Kingdom' },
+    
+    // International - US
+    { name: 'Harvard University', location: 'Cambridge, MA, USA' },
+    { name: 'Stanford University', location: 'Stanford, CA, USA' },
+    { name: 'Massachusetts Institute of Technology (MIT)', location: 'Cambridge, MA, USA' },
+    
+    // International - Canada
+    { name: 'University of Toronto', location: 'Toronto, Canada' },
+    { name: 'University of British Columbia (UBC)', location: 'Vancouver, Canada' },
+    
+    // International - Others
+    { name: 'University of Cape Town', location: 'Cape Town, South Africa' },
+    { name: 'National University of Singapore (NUS)', location: 'Singapore' },
   ];
 
   for (const campus of campuses) {
@@ -61,7 +92,7 @@ async function seed() {
   const salt = await bcrypt.genSalt(10);
   const hashedPassword = await bcrypt.hash('admin123', salt);
 
-  const defaultCampus = await CampusModel.findOne({ name: 'UNILAG' });
+  const defaultCampus = await CampusModel.findOne({ name: 'University of Lagos (UNILAG)' });
 
   await UserModel.findOneAndUpdate(
     { email: 'admin@campuslink.com' },
