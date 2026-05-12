@@ -36,12 +36,15 @@ let Order = class Order {
     quantity;
     totalAmount;
     commissionAmount;
+    fee;
+    totalPayable;
     status;
     paymentStatus;
     bankName;
     accountNumber;
     accountName;
     paymentReference;
+    paidAt;
     notes;
 };
 exports.Order = Order;
@@ -86,6 +89,14 @@ __decorate([
     __metadata("design:type", Number)
 ], Order.prototype, "commissionAmount", void 0);
 __decorate([
+    (0, mongoose_1.Prop)({ default: 0 }),
+    __metadata("design:type", Number)
+], Order.prototype, "fee", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: 0 }),
+    __metadata("design:type", Number)
+], Order.prototype, "totalPayable", void 0);
+__decorate([
     (0, mongoose_1.Prop)({ enum: OrderStatus, default: OrderStatus.PENDING }),
     __metadata("design:type", String)
 ], Order.prototype, "status", void 0);
@@ -109,6 +120,10 @@ __decorate([
     (0, mongoose_1.Prop)(),
     __metadata("design:type", String)
 ], Order.prototype, "paymentReference", void 0);
+__decorate([
+    (0, mongoose_1.Prop)(),
+    __metadata("design:type", Date)
+], Order.prototype, "paidAt", void 0);
 __decorate([
     (0, mongoose_1.Prop)(),
     __metadata("design:type", String)

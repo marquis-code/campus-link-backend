@@ -28,14 +28,14 @@ const multerOptions = {
 export class UploadController {
   constructor(private uploadService: UploadService) {}
 
-  @Post()
+  @Post('single')
   @UseInterceptors(FileInterceptor('file', multerOptions))
   async uploadSingle(@UploadedFile() file: Express.Multer.File) {
     return this.uploadService.uploadFile(file, 'campuslink/products');
   }
 
   @Post('multiple')
-  @UseInterceptors(FilesInterceptor('files', 5, multerOptions))
+  @UseInterceptors(FilesInterceptor('files', 10, multerOptions))
   async uploadMultiple(@UploadedFiles() files: Express.Multer.File[]) {
     return this.uploadService.uploadMultiple(files, 'campuslink/products');
   }

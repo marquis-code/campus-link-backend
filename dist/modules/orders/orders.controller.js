@@ -21,6 +21,7 @@ const roles_guard_1 = require("../../common/guards/roles.guard");
 const roles_decorator_1 = require("../../common/decorators/roles.decorator");
 const current_user_decorator_1 = require("../../common/decorators/current-user.decorator");
 const user_schema_1 = require("../../schemas/user.schema");
+const parse_object_id_pipe_1 = require("../../common/pipes/parse-object-id.pipe");
 let OrdersController = class OrdersController {
     ordersService;
     constructor(ordersService) {
@@ -41,8 +42,8 @@ let OrdersController = class OrdersController {
     findOne(id) {
         return this.ordersService.findOne(id);
     }
-    updateStatus(id, userId, dto) {
-        return this.ordersService.updateStatus(id, dto, userId);
+    updateStatus(id, user, dto) {
+        return this.ordersService.updateStatus(id, dto, user);
     }
 };
 exports.OrdersController = OrdersController;
@@ -85,7 +86,7 @@ __decorate([
 __decorate([
     (0, common_1.Get)(':id'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
-    __param(0, (0, common_1.Param)('id')),
+    __param(0, (0, common_1.Param)('id', parse_object_id_pipe_1.ParseObjectIdPipe)),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
@@ -93,11 +94,11 @@ __decorate([
 __decorate([
     (0, common_1.Patch)(':id/status'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
-    __param(0, (0, common_1.Param)('id')),
-    __param(1, (0, current_user_decorator_1.CurrentUser)('_id')),
+    __param(0, (0, common_1.Param)('id', parse_object_id_pipe_1.ParseObjectIdPipe)),
+    __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __param(2, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String, order_dto_1.UpdateOrderStatusDto]),
+    __metadata("design:paramtypes", [String, Object, order_dto_1.UpdateOrderStatusDto]),
     __metadata("design:returntype", void 0)
 ], OrdersController.prototype, "updateStatus", null);
 exports.OrdersController = OrdersController = __decorate([

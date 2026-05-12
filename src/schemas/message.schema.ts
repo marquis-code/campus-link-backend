@@ -16,8 +16,15 @@ export class Message {
   @Prop({ type: Types.ObjectId, ref: 'Conversation', required: true })
   conversation: Types.ObjectId;
 
-  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
-  sender: Types.ObjectId;
+  @Prop({ type: Types.ObjectId, ref: 'User' })
+  sender?: Types.ObjectId;
+
+  @Prop({ type: Object })
+  guestSender?: {
+    name: string;
+    email: string;
+    phone: string;
+  };
 
   @Prop({ required: true })
   type: MessageType;
@@ -36,6 +43,9 @@ export class Message {
 
   @Prop({ default: false })
   isRead: boolean;
+
+  @Prop({ default: false })
+  isSystem: boolean;
 
   @Prop({ type: [{ type: Types.ObjectId, ref: 'User' }] })
   readBy: Types.ObjectId[];

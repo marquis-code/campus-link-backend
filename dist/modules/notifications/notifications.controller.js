@@ -17,6 +17,7 @@ const common_1 = require("@nestjs/common");
 const notifications_service_1 = require("./notifications.service");
 const jwt_auth_guard_1 = require("../../common/guards/jwt-auth.guard");
 const current_user_decorator_1 = require("../../common/decorators/current-user.decorator");
+const parse_object_id_pipe_1 = require("../../common/pipes/parse-object-id.pipe");
 let NotificationsController = class NotificationsController {
     notificationsService;
     constructor(notificationsService) {
@@ -54,7 +55,7 @@ __decorate([
 ], NotificationsController.prototype, "getUnreadCount", null);
 __decorate([
     (0, common_1.Patch)(':id/read'),
-    __param(0, (0, common_1.Param)('id')),
+    __param(0, (0, common_1.Param)('id', parse_object_id_pipe_1.ParseObjectIdPipe)),
     __param(1, (0, current_user_decorator_1.CurrentUser)('_id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String]),

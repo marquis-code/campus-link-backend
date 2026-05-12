@@ -22,12 +22,15 @@ export declare class Order {
     quantity: number;
     totalAmount: number;
     commissionAmount: number;
+    fee: number;
+    totalPayable: number;
     status: OrderStatus;
     paymentStatus: PaymentStatus;
     bankName: string;
     accountNumber: string;
     accountName: string;
     paymentReference: string;
+    paidAt: Date;
     notes: string;
 }
 export declare const OrderSchema: import("mongoose").Schema<Order, import("mongoose").Model<Order, any, any, any, any, any, Order>, {}, {}, {}, {}, import("mongoose").DefaultSchemaOptions, Order, Document<unknown, {}, Order, {
@@ -129,6 +132,24 @@ export declare const OrderSchema: import("mongoose").Schema<Order, import("mongo
     }, "id"> & {
         id: string;
     }> | undefined;
+    fee?: import("mongoose").SchemaDefinitionProperty<number, Order, Document<unknown, {}, Order, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Order & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & {
+        id: string;
+    }> | undefined;
+    totalPayable?: import("mongoose").SchemaDefinitionProperty<number, Order, Document<unknown, {}, Order, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Order & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & {
+        id: string;
+    }> | undefined;
     status?: import("mongoose").SchemaDefinitionProperty<OrderStatus, Order, Document<unknown, {}, Order, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<Order & {
@@ -175,6 +196,15 @@ export declare const OrderSchema: import("mongoose").Schema<Order, import("mongo
         id: string;
     }> | undefined;
     paymentReference?: import("mongoose").SchemaDefinitionProperty<string, Order, Document<unknown, {}, Order, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Order & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & {
+        id: string;
+    }> | undefined;
+    paidAt?: import("mongoose").SchemaDefinitionProperty<Date, Order, Document<unknown, {}, Order, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<Order & {
         _id: Types.ObjectId;

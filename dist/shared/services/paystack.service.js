@@ -50,8 +50,91 @@ let PaystackService = PaystackService_1 = class PaystackService {
             throw error;
         }
     }
-    async verifyWebhook(signature, payload) {
-        return true;
+    async initializeTransaction(email, amount, reference, callbackUrl) {
+        try {
+            const response = await axios_1.default.post(`${this.baseUrl}/transaction/initialize`, {
+                email,
+                amount: Math.round(amount * 100),
+                reference,
+                callback_url: callbackUrl,
+            }, { headers: this.headers });
+            return response.data.data;
+        }
+        catch (error) {
+            this.logger.error('Failed to initialize Paystack transaction', error.response?.data || error.message);
+            throw error;
+        }
+    }
+    async verifyTransaction(reference) {
+        try {
+            const response = await axios_1.default.get(`${this.baseUrl}/transaction/verify/${reference}`, { headers: this.headers });
+            return response.data.data;
+        }
+        catch (error) {
+            this.logger.error('Failed to verify Paystack transaction', error.response?.data || error.message);
+            throw error;
+        }
+    }
+    async createTransferRecipient(name, accountNumber, bankCode) {
+        try {
+            const response = await axios_1.default.post(`${this.baseUrl}/transferrecipient`, {
+                type: 'nuban',
+                name,
+                account_number: accountNumber,
+                bank_code: bankCode,
+                currency: 'NGN',
+            }, { headers: this.headers });
+            return response.data.data;
+        }
+        catch (error) {
+            this.logger.error('Failed to create Transfer Recipient', error.response?.data || error.message);
+            throw error;
+        }
+    }
+    async initiateTransfer(amount, recipientCode, reference, reason) {
+        try {
+            const response = await axios_1.default.post(`${this.baseUrl}/transfer`, {
+                source: 'balance',
+                amount: Math.round(amount * 100),
+                recipient: recipientCode,
+                reference,
+                reason: reason || 'CampusLink Payout',
+            }, { headers: this.headers });
+            return response.data.data;
+        }
+        catch (error) {
+            this.logger.error('Failed to initiate transfer', error.response?.data || error.message);
+            throw error;
+        }
+    }
+    async getBanks() {
+        try {
+            const response = await axios_1.default.get(`${this.baseUrl}/bank`, { headers: this.headers });
+            return response.data.data;
+        }
+        catch (error) {
+            this.logger.error('Failed to fetch banks', error.message);
+            throw error;
+        }
+    }
+    async resolveAccountNumber(accountNumber, bankCode) {
+        try {
+            const response = await axios_1.default.get(`${this.baseUrl}/bank/resolve?account_number=${accountNumber}&bank_code=${bankCode}`, { headers: this.headers });
+            return response.data.data;
+        }
+        catch (error) {
+            this.logger.error('Failed to resolve account number', error.response?.data || error.message);
+            throw error;
+        }
+    }
+    verifySignature(signature, payload) {
+        const crypto = require('crypto');
+        const secret = this.configService.get('PAYSTACK_SECRET_KEY');
+        const hash = crypto
+            .createHmac('sha512', secret)
+            .update(JSON.stringify(payload))
+            .digest('hex');
+        return hash === signature;
     }
 };
 exports.PaystackService = PaystackService;

@@ -7,6 +7,7 @@ export declare class CreateOrderDto {
     quantity?: number;
     referralCode?: string;
     notes?: string;
+    paymentMethod?: string;
 }
 export declare class UpdateOrderStatusDto {
     status: OrderStatus;

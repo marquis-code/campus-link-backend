@@ -15,6 +15,7 @@ import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { UserRole } from '../../schemas/user.schema';
+import { ParseObjectIdPipe } from '../../common/pipes/parse-object-id.pipe';
 
 @Controller('orders')
 export class OrdersController {
@@ -59,7 +60,7 @@ export class OrdersController {
   // Get single order
   @Get(':id')
   @UseGuards(JwtAuthGuard)
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id', ParseObjectIdPipe) id: string) {
     return this.ordersService.findOne(id);
   }
 
@@ -67,10 +68,10 @@ export class OrdersController {
   @Patch(':id/status')
   @UseGuards(JwtAuthGuard)
   updateStatus(
-    @Param('id') id: string,
-    @CurrentUser('_id') userId: string,
+    @Param('id', ParseObjectIdPipe) id: string,
+    @CurrentUser() user: any,
     @Body() dto: UpdateOrderStatusDto,
   ) {
-    return this.ordersService.updateStatus(id, dto, userId);
+    return this.ordersService.updateStatus(id, dto, user);
   }
 }

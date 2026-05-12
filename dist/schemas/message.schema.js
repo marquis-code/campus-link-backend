@@ -23,12 +23,14 @@ var MessageType;
 let Message = class Message {
     conversation;
     sender;
+    guestSender;
     type;
     content;
     mediaUrl;
     mediaSize;
     mediaDuration;
     isRead;
+    isSystem;
     readBy;
 };
 exports.Message = Message;
@@ -37,9 +39,13 @@ __decorate([
     __metadata("design:type", mongoose_2.Types.ObjectId)
 ], Message.prototype, "conversation", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: 'User', required: true }),
+    (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: 'User' }),
     __metadata("design:type", mongoose_2.Types.ObjectId)
 ], Message.prototype, "sender", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: Object }),
+    __metadata("design:type", Object)
+], Message.prototype, "guestSender", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ required: true }),
     __metadata("design:type", String)
@@ -64,6 +70,10 @@ __decorate([
     (0, mongoose_1.Prop)({ default: false }),
     __metadata("design:type", Boolean)
 ], Message.prototype, "isRead", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: false }),
+    __metadata("design:type", Boolean)
+], Message.prototype, "isSystem", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ type: [{ type: mongoose_2.Types.ObjectId, ref: 'User' }] }),
     __metadata("design:type", Array)

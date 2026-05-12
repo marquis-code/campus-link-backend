@@ -9,13 +9,19 @@ export declare enum MessageType {
 }
 export declare class Message {
     conversation: Types.ObjectId;
-    sender: Types.ObjectId;
+    sender?: Types.ObjectId;
+    guestSender?: {
+        name: string;
+        email: string;
+        phone: string;
+    };
     type: MessageType;
     content: string;
     mediaUrl?: string;
     mediaSize?: number;
     mediaDuration?: number;
     isRead: boolean;
+    isSystem: boolean;
     readBy: Types.ObjectId[];
 }
 export declare const MessageSchema: import("mongoose").Schema<Message, import("mongoose").Model<Message, any, any, any, any, any, Message>, {}, {}, {}, {}, import("mongoose").DefaultSchemaOptions, Message, Document<unknown, {}, Message, {
@@ -36,7 +42,20 @@ export declare const MessageSchema: import("mongoose").Schema<Message, import("m
     }, "id"> & {
         id: string;
     }> | undefined;
-    sender?: import("mongoose").SchemaDefinitionProperty<Types.ObjectId, Message, Document<unknown, {}, Message, {
+    sender?: import("mongoose").SchemaDefinitionProperty<Types.ObjectId | undefined, Message, Document<unknown, {}, Message, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Message & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & {
+        id: string;
+    }> | undefined;
+    guestSender?: import("mongoose").SchemaDefinitionProperty<{
+        name: string;
+        email: string;
+        phone: string;
+    } | undefined, Message, Document<unknown, {}, Message, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<Message & {
         _id: Types.ObjectId;
@@ -91,6 +110,15 @@ export declare const MessageSchema: import("mongoose").Schema<Message, import("m
         id: string;
     }> | undefined;
     isRead?: import("mongoose").SchemaDefinitionProperty<boolean, Message, Document<unknown, {}, Message, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Message & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & {
+        id: string;
+    }> | undefined;
+    isSystem?: import("mongoose").SchemaDefinitionProperty<boolean, Message, Document<unknown, {}, Message, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<Message & {
         _id: Types.ObjectId;

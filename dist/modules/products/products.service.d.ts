@@ -44,6 +44,7 @@ export declare class ProductsService {
     }>;
     incrementSales(productId: string): Promise<void>;
     incrementPromoters(productId: string): Promise<void>;
+    decrementPromoters(productId: string): Promise<void>;
     updateAiCopy(id: string, copy: string): Promise<(Product & import("mongoose").Document<Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
         _id: Types.ObjectId;
     }> & {

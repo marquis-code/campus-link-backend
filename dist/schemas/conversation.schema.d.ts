@@ -5,6 +5,11 @@ export declare class Conversation {
     lastMessage: Types.ObjectId;
     isSupport: boolean;
     subject?: string;
+    guestInfo?: {
+        name: string;
+        email: string;
+        phone: string;
+    };
     updatedAt: Date;
 }
 export declare const ConversationSchema: import("mongoose").Schema<Conversation, import("mongoose").Model<Conversation, any, any, any, any, any, Conversation>, {}, {}, {}, {}, import("mongoose").DefaultSchemaOptions, Conversation, Document<unknown, {}, Conversation, {
@@ -44,6 +49,19 @@ export declare const ConversationSchema: import("mongoose").Schema<Conversation,
         id: string;
     }> | undefined;
     subject?: import("mongoose").SchemaDefinitionProperty<string | undefined, Conversation, Document<unknown, {}, Conversation, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Conversation & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & {
+        id: string;
+    }> | undefined;
+    guestInfo?: import("mongoose").SchemaDefinitionProperty<{
+        name: string;
+        email: string;
+        phone: string;
+    } | undefined, Conversation, Document<unknown, {}, Conversation, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<Conversation & {
         _id: Types.ObjectId;

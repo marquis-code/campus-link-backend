@@ -105,4 +105,29 @@ export class MailService {
     `;
     return this.sendMail(to, 'Withdrawal Processed ✅', html);
   }
+
+  /**
+   * Password reset email.
+   */
+  async sendPasswordResetEmail(to: string, name: string, resetUrl: string) {
+    const html = `
+      <div style="font-family: 'Inter', sans-serif; max-width: 600px; margin: 0 auto; background: #f8fafc; padding: 40px 20px;">
+        <div style="background: white; border-radius: 20px; padding: 40px; border: 1px solid #e2e8f0; text-align: center;">
+          <h2 style="color: #1e293b; margin: 0 0 12px; font-weight: 800;">Reset your password</h2>
+          <p style="color: #64748b; font-size: 14px; line-height: 1.6; margin-bottom: 32px;">
+            Hi ${name}, we received a request to reset your CampusLink password. Click the button below to choose a new one. This link expires in 15 minutes.
+          </p>
+          <a href="${resetUrl}" style="background: #1e293b; color: white; padding: 16px 40px; border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 14px; display: inline-block;">
+            Reset Password
+          </a>
+          <p style="color: #94a3b8; font-size: 12px; margin-top: 32px;">
+            If you didn't request this, you can safely ignore this email.
+          </p>
+          <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 32px 0;" />
+          <p style="font-size: 11px; color: #cbd5e1;">CampusLink Technologies — Empowering students nationwide.</p>
+        </div>
+      </div>
+    `;
+    return this.sendMail(to, 'Reset your CampusLink password', html);
+  }
 }

@@ -12,13 +12,21 @@ const mongoose_1 = require("@nestjs/mongoose");
 const earnings_controller_1 = require("./earnings.controller");
 const earnings_service_1 = require("./earnings.service");
 const earning_schema_1 = require("../../schemas/earning.schema");
+const order_schema_1 = require("../../schemas/order.schema");
+const withdrawal_schema_1 = require("../../schemas/withdrawal.schema");
+const wallets_module_1 = require("../wallets/wallets.module");
 let EarningsModule = class EarningsModule {
 };
 exports.EarningsModule = EarningsModule;
 exports.EarningsModule = EarningsModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            mongoose_1.MongooseModule.forFeature([{ name: earning_schema_1.Earning.name, schema: earning_schema_1.EarningSchema }]),
+            mongoose_1.MongooseModule.forFeature([
+                { name: earning_schema_1.Earning.name, schema: earning_schema_1.EarningSchema },
+                { name: order_schema_1.Order.name, schema: order_schema_1.OrderSchema },
+                { name: withdrawal_schema_1.Withdrawal.name, schema: withdrawal_schema_1.WithdrawalSchema },
+            ]),
+            wallets_module_1.WalletsModule,
         ],
         controllers: [earnings_controller_1.EarningsController],
         providers: [earnings_service_1.EarningsService],

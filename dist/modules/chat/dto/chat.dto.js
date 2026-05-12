@@ -54,11 +54,12 @@ class CreateConversationDto {
     participantId;
     subject;
     isSupport;
+    guestInfo;
 }
 exports.CreateConversationDto = CreateConversationDto;
 __decorate([
+    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", String)
 ], CreateConversationDto.prototype, "participantId", void 0);
 __decorate([
@@ -70,4 +71,8 @@ __decorate([
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", Boolean)
 ], CreateConversationDto.prototype, "isSupport", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Object)
+], CreateConversationDto.prototype, "guestInfo", void 0);
 //# sourceMappingURL=chat.dto.js.map

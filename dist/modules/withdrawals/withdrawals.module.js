@@ -13,8 +13,11 @@ const withdrawals_controller_1 = require("./withdrawals.controller");
 const withdrawals_service_1 = require("./withdrawals.service");
 const withdrawal_schema_1 = require("../../schemas/withdrawal.schema");
 const user_schema_1 = require("../../schemas/user.schema");
+const order_schema_1 = require("../../schemas/order.schema");
 const notifications_module_1 = require("../notifications/notifications.module");
 const earnings_module_1 = require("../earnings/earnings.module");
+const shared_module_1 = require("../../shared/services/shared.module");
+const wallets_module_1 = require("../wallets/wallets.module");
 let WithdrawalsModule = class WithdrawalsModule {
 };
 exports.WithdrawalsModule = WithdrawalsModule;
@@ -24,9 +27,12 @@ exports.WithdrawalsModule = WithdrawalsModule = __decorate([
             mongoose_1.MongooseModule.forFeature([
                 { name: withdrawal_schema_1.Withdrawal.name, schema: withdrawal_schema_1.WithdrawalSchema },
                 { name: user_schema_1.User.name, schema: user_schema_1.UserSchema },
+                { name: order_schema_1.Order.name, schema: order_schema_1.OrderSchema },
             ]),
             earnings_module_1.EarningsModule,
             notifications_module_1.NotificationsModule,
+            shared_module_1.SharedModule,
+            wallets_module_1.WalletsModule,
         ],
         controllers: [withdrawals_controller_1.WithdrawalsController],
         providers: [withdrawals_service_1.WithdrawalsService],

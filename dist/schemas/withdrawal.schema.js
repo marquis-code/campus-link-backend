@@ -19,6 +19,8 @@ var WithdrawalStatus;
     WithdrawalStatus["REJECTED"] = "rejected";
     WithdrawalStatus["PROCESSING"] = "processing";
     WithdrawalStatus["COMPLETED"] = "completed";
+    WithdrawalStatus["FAILED"] = "failed";
+    WithdrawalStatus["REVERSED"] = "reversed";
 })(WithdrawalStatus || (exports.WithdrawalStatus = WithdrawalStatus = {}));
 let Withdrawal = class Withdrawal {
     user;
@@ -26,6 +28,9 @@ let Withdrawal = class Withdrawal {
     bankName;
     bankAccountNumber;
     bankAccountName;
+    bankCode;
+    recipientCode;
+    transferReference;
     status;
     adminNote;
     processedBy;
@@ -52,6 +57,18 @@ __decorate([
     (0, mongoose_1.Prop)(),
     __metadata("design:type", String)
 ], Withdrawal.prototype, "bankAccountName", void 0);
+__decorate([
+    (0, mongoose_1.Prop)(),
+    __metadata("design:type", String)
+], Withdrawal.prototype, "bankCode", void 0);
+__decorate([
+    (0, mongoose_1.Prop)(),
+    __metadata("design:type", String)
+], Withdrawal.prototype, "recipientCode", void 0);
+__decorate([
+    (0, mongoose_1.Prop)(),
+    __metadata("design:type", String)
+], Withdrawal.prototype, "transferReference", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ enum: WithdrawalStatus, default: WithdrawalStatus.PENDING }),
     __metadata("design:type", String)

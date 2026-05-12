@@ -118,7 +118,7 @@ let ProductsService = class ProductsService {
         const product = await this.productModel.findById(id);
         if (!product)
             throw new common_1.NotFoundException('Product not found');
-        if (product.seller.toString() !== sellerId) {
+        if (product.seller.toString() !== sellerId.toString()) {
             throw new common_1.ForbiddenException('You can only update your own products');
         }
         const updateData = { ...dto };
@@ -152,7 +152,7 @@ let ProductsService = class ProductsService {
         const product = await this.productModel.findById(id);
         if (!product)
             throw new common_1.NotFoundException('Product not found');
-        if (!isAdmin && product.seller.toString() !== userId) {
+        if (!isAdmin && product.seller.toString() !== userId.toString()) {
             throw new common_1.ForbiddenException('You can only delete your own products');
         }
         await this.productModel.findByIdAndDelete(id);
@@ -166,6 +166,11 @@ let ProductsService = class ProductsService {
     async incrementPromoters(productId) {
         await this.productModel.findByIdAndUpdate(productId, {
             $inc: { totalPromoters: 1 },
+        });
+    }
+    async decrementPromoters(productId) {
+        await this.productModel.findByIdAndUpdate(productId, {
+            $inc: { totalPromoters: -1 },
         });
     }
     async updateAiCopy(id, copy) {

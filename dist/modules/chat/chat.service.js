@@ -26,8 +26,22 @@ let ChatService = class ChatService {
         this.messageModel = messageModel;
     }
     async createConversation(userId, dto) {
-        const participants = [new mongoose_2.Types.ObjectId(userId), new mongoose_2.Types.ObjectId(dto.participantId)];
-        if (!dto.isSupport) {
+        if (!mongoose_2.Types.ObjectId.isValid(userId)) {
+            throw new common_1.BadRequestException('Invalid user ID');
+        }
+        const participants = [new mongoose_2.Types.ObjectId(userId)];
+        if (dto.participantId && mongoose_2.Types.ObjectId.isValid(dto.participantId) && dto.participantId !== userId) {
+            participants.push(new mongoose_2.Types.ObjectId(dto.participantId));
+        }
+        if (dto.isSupport) {
+            const existingSupport = await this.conversationModel.findOne({
+                participants: new mongoose_2.Types.ObjectId(userId),
+                isSupport: true,
+            });
+            if (existingSupport)
+                return existingSupport;
+        }
+        if (!dto.isSupport && dto.participantId) {
             const existing = await this.conversationModel.findOne({
                 participants: { $all: participants },
                 isSupport: false,
@@ -39,7 +53,38 @@ let ChatService = class ChatService {
             participants,
             isSupport: !!dto.isSupport,
             subject: dto.subject,
+            guestInfo: dto.guestInfo,
         });
+    }
+    async createGuestConversation(dto) {
+        const conversation = await this.conversationModel.create({
+            participants: [],
+            isSupport: true,
+            subject: dto.subject || 'Guest Support Request',
+            guestInfo: dto.guestInfo,
+        });
+        let systemMessage = null;
+        if (dto.guestInfo?.name) {
+            const firstName = dto.guestInfo.name.split(' ')[0];
+            const greetings = [
+                `Hey ${firstName}! 👋 Welcome to CampusLink. We're super excited to have you here! How can we help you today? ✨`,
+                `Hello ${firstName}, welcome to the community! 🎓 Our team is here to assist you with anything you need. What's on your mind?`,
+                `Hi ${firstName}! ✨ Thanks for reaching out to CampusLink. One of our student ambassadors will be with you shortly. In the meantime, feel free to ask your question! 🚀`
+            ];
+            const randomGreeting = greetings[Math.floor(Math.random() * greetings.length)];
+            systemMessage = await this.messageModel.create({
+                conversation: conversation._id,
+                type: message_schema_1.MessageType.TEXT,
+                content: randomGreeting,
+                isSystem: true
+            });
+            if (systemMessage) {
+                await this.conversationModel.findByIdAndUpdate(conversation._id, {
+                    lastMessage: systemMessage._id,
+                });
+            }
+        }
+        return { conversation, message: systemMessage };
     }
     async getConversationById(id) {
         return this.conversationModel.findById(id).exec();
@@ -63,15 +108,25 @@ let ChatService = class ChatService {
             .exec();
     }
     async sendMessage(userId, dto) {
-        const message = await this.messageModel.create({
+        const isGuest = userId.startsWith('guest_');
+        const messageData = {
             conversation: new mongoose_2.Types.ObjectId(dto.conversationId),
-            sender: new mongoose_2.Types.ObjectId(userId),
             type: dto.type,
             content: dto.content,
             mediaUrl: dto.mediaUrl,
             mediaSize: dto.mediaSize,
             mediaDuration: dto.mediaDuration,
-        });
+        };
+        if (isGuest) {
+            const conv = await this.conversationModel.findById(dto.conversationId);
+            if (conv && conv.guestInfo) {
+                messageData.guestSender = conv.guestInfo;
+            }
+        }
+        else {
+            messageData.sender = new mongoose_2.Types.ObjectId(userId);
+        }
+        const message = await this.messageModel.create(messageData);
         await this.conversationModel.findByIdAndUpdate(dto.conversationId, {
             lastMessage: message._id,
             updatedAt: new Date(),
@@ -79,7 +134,12 @@ let ChatService = class ChatService {
         return message.populate('sender', 'name avatar');
     }
     async markAsRead(messageId, userId) {
-        return this.messageModel.findByIdAndUpdate(messageId, { $addToSet: { readBy: new mongoose_2.Types.ObjectId(userId) }, isRead: true }, { new: true });
+        const isGuest = userId.startsWith('guest_');
+        const update = { isRead: true };
+        if (!isGuest) {
+            update.$addToSet = { readBy: new mongoose_2.Types.ObjectId(userId) };
+        }
+        return this.messageModel.findByIdAndUpdate(messageId, update, { new: true });
     }
     async getSupportConversations() {
         return this.conversationModel

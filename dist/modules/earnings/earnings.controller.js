@@ -28,7 +28,10 @@ let EarningsController = class EarningsController {
     findMine(userId) {
         return this.earningsService.findMyEarnings(userId);
     }
-    getSummary(userId) {
+    getSummary(userId, role) {
+        if (role === user_schema_1.UserRole.SELLER) {
+            return this.earningsService.getSellerEarningsSummary(userId);
+        }
         return this.earningsService.getEarningsSummary(userId);
     }
     findAll(page, limit) {
@@ -37,9 +40,10 @@ let EarningsController = class EarningsController {
 };
 exports.EarningsController = EarningsController;
 __decorate([
+    (0, common_1.Get)('me'),
     (0, common_1.Get)('mine'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(user_schema_1.UserRole.STUDENT),
+    (0, roles_decorator_1.Roles)(user_schema_1.UserRole.STUDENT, user_schema_1.UserRole.SELLER),
     __param(0, (0, current_user_decorator_1.CurrentUser)('_id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
@@ -48,10 +52,11 @@ __decorate([
 __decorate([
     (0, common_1.Get)('summary'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(user_schema_1.UserRole.STUDENT),
+    (0, roles_decorator_1.Roles)(user_schema_1.UserRole.STUDENT, user_schema_1.UserRole.SELLER),
     __param(0, (0, current_user_decorator_1.CurrentUser)('_id')),
+    __param(1, (0, current_user_decorator_1.CurrentUser)('role')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", void 0)
 ], EarningsController.prototype, "getSummary", null);
 __decorate([

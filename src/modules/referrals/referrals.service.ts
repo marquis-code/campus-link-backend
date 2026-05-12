@@ -27,7 +27,7 @@ export class ReferralsService {
     }
 
     // Check if seller is trying to promote their own product
-    if (product.seller.toString() === promoterId) {
+    if (product.seller.toString() === promoterId.toString()) {
       throw new BadRequestException('You cannot promote your own product');
     }
 
@@ -40,7 +40,7 @@ export class ReferralsService {
     if (existing) {
       return this.referralModel
         .findById(existing._id)
-        .populate('product', 'name price commissionAmount images')
+        .populate('product', 'name price commissionAmount images description category')
         .populate('promoter', 'name email')
         .lean();
     }
@@ -59,7 +59,7 @@ export class ReferralsService {
 
     return this.referralModel
       .findById(referral._id)
-      .populate('product', 'name price commissionAmount images')
+      .populate('product', 'name price commissionAmount images description category')
       .populate('promoter', 'name email')
       .lean();
   }
@@ -118,5 +118,19 @@ export class ReferralsService {
     await this.referralModel.findByIdAndUpdate(referralId, {
       $inc: { orders: 1, earnings: commissionAmount },
     });
+  }
+
+  async remove(promoterId: string, referralId: string) {
+    const referral = await this.referralModel.findOne({
+      _id: new Types.ObjectId(referralId),
+      promoter: new Types.ObjectId(promoterId),
+    });
+
+    if (!referral) throw new NotFoundException('Referral asset not found');
+
+    // Decrement product promoters count
+    await this.productsService.decrementPromoters(referral.product.toString());
+
+    return this.referralModel.findByIdAndDelete(referralId);
   }
 }

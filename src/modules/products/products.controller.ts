@@ -21,6 +21,7 @@ import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { UserRole } from '../../schemas/user.schema';
+import { ParseObjectIdPipe } from '../../common/pipes/parse-object-id.pipe';
 
 @Controller('products')
 export class ProductsController {
@@ -50,7 +51,7 @@ export class ProductsController {
 
   // Public: get product details
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id', ParseObjectIdPipe) id: string) {
     return this.productsService.findOne(id);
   }
 
@@ -67,7 +68,7 @@ export class ProductsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.SELLER)
   update(
-    @Param('id') id: string,
+    @Param('id', ParseObjectIdPipe) id: string,
     @CurrentUser('_id') userId: string,
     @Body() dto: UpdateProductDto,
   ) {
@@ -78,14 +79,14 @@ export class ProductsController {
   @Patch(':id/status')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
-  updateStatus(@Param('id') id: string, @Body() dto: UpdateProductStatusDto) {
+  updateStatus(@Param('id', ParseObjectIdPipe) id: string, @Body() dto: UpdateProductStatusDto) {
     return this.productsService.updateStatus(id, dto);
   }
 
   // Seller/Admin: delete product
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
-  remove(@CurrentUser() user: any, @Param('id') id: string) {
+  remove(@CurrentUser() user: any, @Param('id', ParseObjectIdPipe) id: string) {
     return this.productsService.remove(
       id,
       user._id,

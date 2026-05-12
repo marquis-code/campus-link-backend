@@ -22,6 +22,8 @@ const order_schema_1 = require("../../schemas/order.schema");
 const earning_schema_1 = require("../../schemas/earning.schema");
 const referral_schema_1 = require("../../schemas/referral.schema");
 const withdrawal_schema_1 = require("../../schemas/withdrawal.schema");
+const wallet_schema_1 = require("../../schemas/wallet.schema");
+const transaction_schema_1 = require("../../schemas/transaction.schema");
 let AdminService = class AdminService {
     userModel;
     productModel;
@@ -29,13 +31,45 @@ let AdminService = class AdminService {
     earningModel;
     referralModel;
     withdrawalModel;
-    constructor(userModel, productModel, orderModel, earningModel, referralModel, withdrawalModel) {
+    walletModel;
+    transactionModel;
+    constructor(userModel, productModel, orderModel, earningModel, referralModel, withdrawalModel, walletModel, transactionModel) {
         this.userModel = userModel;
         this.productModel = productModel;
         this.orderModel = orderModel;
         this.earningModel = earningModel;
         this.referralModel = referralModel;
         this.withdrawalModel = withdrawalModel;
+        this.walletModel = walletModel;
+        this.transactionModel = transactionModel;
+    }
+    async getAllTransactions(page = 1, limit = 20) {
+        const skip = (page - 1) * limit;
+        const [transactions, total] = await Promise.all([
+            this.transactionModel
+                .find()
+                .populate('user', 'name email role')
+                .sort('-createdAt')
+                .skip(skip)
+                .limit(limit)
+                .lean(),
+            this.transactionModel.countDocuments(),
+        ]);
+        return { transactions, total, page, pages: Math.ceil(total / limit) };
+    }
+    async getAllWallets(page = 1, limit = 20) {
+        const skip = (page - 1) * limit;
+        const [wallets, total] = await Promise.all([
+            this.walletModel
+                .find()
+                .populate('user', 'name email role')
+                .sort('-balance')
+                .skip(skip)
+                .limit(limit)
+                .lean(),
+            this.walletModel.countDocuments(),
+        ]);
+        return { wallets, total, page, pages: Math.ceil(total / limit) };
     }
     async getStats() {
         const [totalUsers, totalStudents, totalSellers, totalProducts, activeProducts, pendingProducts, totalOrders, confirmedOrders, pendingOrders, totalReferrals, pendingWithdrawals, totalRevenueResult, totalEarningsResult, totalWithdrawnResult,] = await Promise.all([
@@ -157,7 +191,11 @@ exports.AdminService = AdminService = __decorate([
     __param(3, (0, mongoose_1.InjectModel)(earning_schema_1.Earning.name)),
     __param(4, (0, mongoose_1.InjectModel)(referral_schema_1.Referral.name)),
     __param(5, (0, mongoose_1.InjectModel)(withdrawal_schema_1.Withdrawal.name)),
+    __param(6, (0, mongoose_1.InjectModel)(wallet_schema_1.Wallet.name)),
+    __param(7, (0, mongoose_1.InjectModel)(transaction_schema_1.Transaction.name)),
     __metadata("design:paramtypes", [mongoose_2.Model,
+        mongoose_2.Model,
+        mongoose_2.Model,
         mongoose_2.Model,
         mongoose_2.Model,
         mongoose_2.Model,

@@ -8,7 +8,12 @@ export declare class SendMessageDto {
     mediaDuration?: number;
 }
 export declare class CreateConversationDto {
-    participantId: string;
+    participantId?: string;
     subject?: string;
     isSupport?: boolean;
+    guestInfo?: {
+        name: string;
+        email: string;
+        phone: string;
+    };
 }

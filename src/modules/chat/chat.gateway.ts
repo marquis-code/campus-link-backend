@@ -33,14 +33,24 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   async handleConnection(client: Socket) {
     try {
       const token = client.handshake.auth?.token || client.handshake.query?.token;
-      if (!token) {
+      const guestId = client.handshake.auth?.guestId || client.handshake.query?.guestId;
+
+      let userId: string;
+      let role: string | undefined = undefined;
+
+      if (guestId) {
+        userId = `guest_${guestId}`;
+      } else if (token) {
+        const decoded = this.jwtService.verify(token as string);
+        userId = decoded.sub;
+        role = decoded.role;
+      } else {
         client.disconnect();
         return;
       }
 
-      const decoded = this.jwtService.verify(token as string);
-      const userId = decoded.sub;
       (client as any).userId = userId;
+      (client as any).role = role;
       this.socketUsers.set(client.id, userId);
 
       // Track user sessions
@@ -52,10 +62,17 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       // Auto-join user's personal room for DMs
       client.join(`user_${userId}`);
 
+      // Join admins to a dedicated room for support notifications
+      if (role === 'admin') {
+        client.join('admins');
+        this.logger.log(`Chat: Admin ${userId} joined admins room`);
+      }
+
       // Broadcast presence
       this.server.emit('presence', { userId, online: true });
       this.logger.log(`Chat: User ${userId} connected`);
     } catch (e) {
+      this.logger.error(`Connection error: ${e.message}`);
       client.disconnect();
     }
   }
@@ -99,31 +116,46 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @ConnectedSocket() client: Socket,
     @MessageBody() dto: SendMessageDto,
   ) {
-    const userId = (client as any).userId;
-    if (!userId) return;
+    try {
+      const userId = (client as any).userId;
+      if (!userId) return;
 
-    const message = await this.chatService.sendMessage(userId, dto);
+      const message = await this.chatService.sendMessage(userId, dto);
 
-    // Broadcast to all users in the conversation room
-    this.server.to(`conv_${dto.conversationId}`).emit('new_message', message);
+      // Broadcast to all users in the conversation room
+      this.server.to(`conv_${dto.conversationId}`).emit('new_message', message);
 
-    // Notify participants not in the room
-    const conversation = await this.chatService.getConversationById(dto.conversationId);
-    if (conversation) {
-      for (const participant of conversation.participants) {
-        const pId = participant.toString();
-        if (pId !== userId) {
-          // Send to their personal room (they may not be in the conversation room)
-          this.server.to(`user_${pId}`).emit('message_notification', {
+      // Notify participants not in the room
+      const conversation = await this.chatService.getConversationById(dto.conversationId);
+      if (conversation) {
+        // If it's a support conversation, also notify all online admins
+        if (conversation.isSupport) {
+          this.server.to('admins').emit('message_notification', {
             conversationId: dto.conversationId,
             message,
-            senderName: (message as any).sender?.name || 'Someone',
+            senderName: (message as any).sender?.name || (message as any).guestSender?.name || 'Guest',
           });
         }
-      }
-    }
 
-    return message;
+        for (const participant of conversation.participants) {
+          const pId = participant.toString();
+          if (pId !== userId) {
+            // Send to their personal room (they may not be in the conversation room)
+            this.server.to(`user_${pId}`).emit('message_notification', {
+              conversationId: dto.conversationId,
+              message,
+              senderName: (message as any).sender?.name || (message as any).guestSender?.name || 'Someone',
+            });
+          }
+        }
+      }
+
+      return message;
+    } catch (error) {
+      this.logger.error(`Failed to handle send_message: ${error.message}`, error.stack);
+      client.emit('error', { message: 'Failed to send message', error: error.message });
+      throw error;
+    }
   }
 
   @SubscribeMessage('typing')
@@ -157,6 +189,20 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       readBy: userId,
       conversationId: data.conversationId,
     });
+  }
+
+  /**
+   * Notify admins about a new support conversation
+   */
+  notifyNewConversation(conversation: any) {
+    this.server.to('admins').emit('new_conversation', conversation);
+  }
+
+  /**
+   * Broadcast a message to a conversation room
+   */
+  broadcastMessage(conversationId: string, message: any) {
+    this.server.to(`conv_${conversationId}`).emit('new_message', message);
   }
 
   /**

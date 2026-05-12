@@ -37,4 +37,11 @@ export declare class ReferralsService {
         __v: number;
     }) | null>;
     incrementOrdersAndEarnings(referralId: string, commissionAmount: number): Promise<void>;
+    remove(promoterId: string, referralId: string): Promise<(import("mongoose").Document<unknown, {}, ReferralDocument, {}, import("mongoose").DefaultSchemaOptions> & Referral & import("mongoose").Document<Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
+        _id: Types.ObjectId;
+    }> & {
+        __v: number;
+    } & {
+        id: string;
+    }) | null>;
 }

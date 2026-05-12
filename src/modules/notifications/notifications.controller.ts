@@ -9,6 +9,7 @@ import {
 import { NotificationsService } from './notifications.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { ParseObjectIdPipe } from '../../common/pipes/parse-object-id.pipe';
 
 @Controller('notifications')
 @UseGuards(JwtAuthGuard)
@@ -31,7 +32,7 @@ export class NotificationsController {
 
   @Patch(':id/read')
   markAsRead(
-    @Param('id') id: string,
+    @Param('id', ParseObjectIdPipe) id: string,
     @CurrentUser('_id') userId: string,
   ) {
     return this.notificationsService.markAsRead(id, userId);

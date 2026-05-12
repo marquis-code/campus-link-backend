@@ -16,6 +16,7 @@ const product_schema_1 = require("../../schemas/product.schema");
 const referral_schema_1 = require("../../schemas/referral.schema");
 const earning_schema_1 = require("../../schemas/earning.schema");
 const notifications_module_1 = require("../notifications/notifications.module");
+const wallets_module_1 = require("../wallets/wallets.module");
 let OrdersModule = class OrdersModule {
 };
 exports.OrdersModule = OrdersModule;
@@ -29,6 +30,7 @@ exports.OrdersModule = OrdersModule = __decorate([
                 { name: earning_schema_1.Earning.name, schema: earning_schema_1.EarningSchema },
             ]),
             notifications_module_1.NotificationsModule,
+            wallets_module_1.WalletsModule,
         ],
         controllers: [orders_controller_1.OrdersController],
         providers: [orders_service_1.OrdersService],

@@ -58,9 +58,12 @@ const upload_module_1 = require("./modules/upload/upload.module");
 const chat_module_1 = require("./modules/chat/chat.module");
 const mail_module_1 = require("./modules/mail/mail.module");
 const firebase_module_1 = require("./modules/firebase/firebase.module");
+const seed_module_1 = require("./common/services/seed.module");
 const cache_manager_1 = require("@nestjs/cache-manager");
 const redisStore = __importStar(require("cache-manager-redis-yet"));
 const shared_module_1 = require("./shared/services/shared.module");
+const payments_module_1 = require("./modules/payments/payments.module");
+const wallets_module_1 = require("./modules/wallets/wallets.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -78,11 +81,38 @@ exports.AppModule = AppModule = __decorate([
             cache_manager_1.CacheModule.registerAsync({
                 isGlobal: true,
                 imports: [config_1.ConfigModule],
-                useFactory: async (configService) => ({
-                    store: await redisStore.redisStore({
-                        url: configService.get('REDIS_URL') || 'redis://localhost:6379',
-                    }),
-                }),
+                useFactory: async (configService) => {
+                    const redisUrl = configService.get('REDIS_URL');
+                    if (!redisUrl || redisUrl === 'memory') {
+                        console.log('Using in-memory cache');
+                        return { ttl: 600 };
+                    }
+                    try {
+                        const store = await redisStore.redisStore({
+                            url: redisUrl,
+                            socket: {
+                                connectTimeout: 5000,
+                                reconnectStrategy: (retries) => {
+                                    if (retries > 5) {
+                                        console.warn('Redis reconnection failed too many times. Continuing with broken cache.');
+                                        return false;
+                                    }
+                                    return Math.min(retries * 100, 3000);
+                                }
+                            }
+                        });
+                        if (store.client) {
+                            store.client.on('error', (err) => {
+                                console.error('Redis Client Error (Non-Fatal):', err.message);
+                            });
+                        }
+                        return { store };
+                    }
+                    catch (e) {
+                        console.error('Failed to connect to Redis, falling back to memory cache:', e.message);
+                        return { ttl: 600 };
+                    }
+                },
                 inject: [config_1.ConfigService],
             }),
             shared_module_1.SharedModule,
@@ -101,6 +131,9 @@ exports.AppModule = AppModule = __decorate([
             chat_module_1.ChatModule,
             mail_module_1.MailModule,
             firebase_module_1.FirebaseModule,
+            seed_module_1.SeedModule,
+            payments_module_1.PaymentsModule,
+            wallets_module_1.WalletsModule,
         ],
     })
 ], AppModule);

@@ -44,6 +44,9 @@ export class User {
   @Prop()
   bankAccountName: string;
 
+  @Prop()
+  bankCode: string;
+
   @Prop({ default: true })
   isActive: boolean;
 

@@ -12,6 +12,7 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { UserRole } from '../../schemas/user.schema';
+import { ParseObjectIdPipe } from '../../common/pipes/parse-object-id.pipe';
 
 @Controller('admin')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -36,7 +37,7 @@ export class AdminController {
 
   @Patch('users/:id/status')
   updateUserStatus(
-    @Param('id') id: string,
+    @Param('id', ParseObjectIdPipe) id: string,
     @Body('isActive') isActive: boolean,
   ) {
     return this.adminService.updateUserStatus(id, isActive);
@@ -55,5 +56,21 @@ export class AdminController {
   @Get('top-products')
   getTopProducts(@Query('limit') limit: number) {
     return this.adminService.getTopProducts(limit);
+  }
+
+  @Get('transactions')
+  getAllTransactions(
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+  ) {
+    return this.adminService.getAllTransactions(page, limit);
+  }
+
+  @Get('wallets')
+  getAllWallets(
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+  ) {
+    return this.adminService.getAllWallets(page, limit);
   }
 }

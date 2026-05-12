@@ -18,6 +18,10 @@ export class CreateWithdrawalDto {
   @IsString()
   @IsOptional()
   bankAccountName?: string;
+
+  @IsString()
+  @IsOptional()
+  bankCode?: string;
 }
 
 export class UpdateWithdrawalStatusDto {

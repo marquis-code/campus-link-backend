@@ -20,9 +20,11 @@ const order_schema_1 = require("../../schemas/order.schema");
 const product_schema_1 = require("../../schemas/product.schema");
 const referral_schema_1 = require("../../schemas/referral.schema");
 const earning_schema_1 = require("../../schemas/earning.schema");
+const transaction_schema_1 = require("../../schemas/transaction.schema");
 const notifications_service_1 = require("../notifications/notifications.service");
 const mail_service_1 = require("../mail/mail.service");
 const paystack_service_1 = require("../../shared/services/paystack.service");
+const wallets_service_1 = require("../wallets/wallets.service");
 let OrdersService = class OrdersService {
     orderModel;
     productModel;
@@ -31,7 +33,8 @@ let OrdersService = class OrdersService {
     notificationsService;
     paystackService;
     mailService;
-    constructor(orderModel, productModel, referralModel, earningModel, notificationsService, paystackService, mailService) {
+    walletsService;
+    constructor(orderModel, productModel, referralModel, earningModel, notificationsService, paystackService, mailService, walletsService) {
         this.orderModel = orderModel;
         this.productModel = productModel;
         this.referralModel = referralModel;
@@ -39,6 +42,7 @@ let OrdersService = class OrdersService {
         this.notificationsService = notificationsService;
         this.paystackService = paystackService;
         this.mailService = mailService;
+        this.walletsService = walletsService;
     }
     async create(dto) {
         const product = await this.productModel.findById(dto.productId);
@@ -49,6 +53,14 @@ let OrdersService = class OrdersService {
         }
         const quantity = dto.quantity || 1;
         const totalAmount = product.price * quantity;
+        let fee = 0;
+        let totalPayable = totalAmount;
+        if (totalAmount > 0) {
+            const isAboveThreshold = totalAmount > 2500;
+            const flatFee = isAboveThreshold ? 100 : 0;
+            totalPayable = Math.ceil((totalAmount + flatFee) / (1 - 0.015));
+            fee = totalPayable - totalAmount;
+        }
         let promoterId;
         let referralId;
         if (dto.referralCode) {
@@ -70,12 +82,24 @@ let OrdersService = class OrdersService {
             buyerEmail: dto.buyerEmail,
             quantity,
             totalAmount,
+            fee,
+            totalPayable,
             commissionAmount: promoterId ? product.commissionAmount * quantity : 0,
             notes: dto.notes,
         });
         if (dto.buyerEmail) {
             try {
                 const customer = await this.paystackService.createCustomer(dto.buyerEmail, dto.buyerName.split(' ')[0], dto.buyerName.split(' ')[1] || '', dto.buyerPhone);
+                if (dto.paymentMethod === 'paystack') {
+                    const payment = await this.paystackService.initializeTransaction(dto.buyerEmail, totalPayable, `order_${order._id}`, process.env.STUDENT_URL ? `${process.env.STUDENT_URL}/orders/success` : undefined);
+                    await this.orderModel.findByIdAndUpdate(order._id, {
+                        paymentReference: payment.reference,
+                    });
+                    return {
+                        ...order.toObject(),
+                        checkoutUrl: payment.authorization_url,
+                    };
+                }
                 const dva = await this.paystackService.createVirtualAccount(customer.customer_code);
                 await this.orderModel.findByIdAndUpdate(order._id, {
                     bankName: dva.bank.name,
@@ -85,33 +109,28 @@ let OrdersService = class OrdersService {
                 });
                 await this.mailService.sendMail(dto.buyerEmail, 'Order Received - Payment Details', `<h1>Hello ${dto.buyerName}</h1>
            <p>Thank you for your order of <b>${product.name}</b>.</p>
-           <p>Please make a bank transfer of <b>₦${totalAmount.toLocaleString()}</b> to the following account:</p>
-           <ul>
-             <li><b>Bank:</b> ${dva.bank.name}</li>
-             <li><b>Account Number:</b> ${dva.account_number}</li>
-             <li><b>Account Name:</b> ${dva.account_name}</li>
+           <p>Please make a bank transfer of <b>₦${totalPayable.toLocaleString()}</b> to the following account:</p>
+           <div style="background: #f9fafb; padding: 20px; border-radius: 12px; margin: 20px 0;">
+             <p style="margin: 0; font-size: 12px; color: #6b7280;">Bank Details</p>
+             <p style="margin: 5px 0; font-size: 18px; font-weight: bold; color: #111827;">${dva.bank.name}</p>
+             <p style="margin: 5px 0; font-size: 24px; font-weight: 800; color: #4f46e5; letter-spacing: 1px;">${dva.account_number}</p>
+             <p style="margin: 5px 0; font-size: 14px; font-weight: 600; color: #374151;">${dva.account_name}</p>
+           </div>
+           <p style="font-size: 13px; color: #6b7280;">Payment Breakdown:</p>
+           <ul style="font-size: 13px; color: #374151;">
+             <li>Product Price: ₦${totalAmount.toLocaleString()}</li>
+             <li>Transfer Charge: ₦${fee.toLocaleString()}</li>
+             <li><b>Total Payable: ₦${totalPayable.toLocaleString()}</b></li>
            </ul>
            <p>Your order will be processed as soon as payment is confirmed.</p>`);
             }
             catch (err) {
-                console.error('Paystack DVA creation failed', err);
+                console.error('Paystack integration failed', err);
             }
         }
         const populatedOrder = await order.populate('seller', 'name email');
         const seller = populatedOrder.seller;
         await this.notificationsService.notifyNewOrder(seller._id.toString(), seller.email, order._id.toString(), totalAmount);
-        if (promoterId) {
-            const promoter = await this.orderModel.findById(order._id).populate('promoter', 'name email');
-            if (promoter && promoter.promoter) {
-                await this.notificationsService.create({
-                    user: promoterId.toString(),
-                    title: 'Someone ordered through your link! 🚀',
-                    message: `Your referral for ${product.name} just got an order`,
-                    type: 'order',
-                    emailAddress: promoter.promoter.email,
-                });
-            }
-        }
         return this.orderModel
             .findById(order._id)
             .populate('product', 'name price images')
@@ -119,20 +138,27 @@ let OrdersService = class OrdersService {
             .populate('promoter', 'name email')
             .lean();
     }
-    async updateStatus(orderId, dto, userId) {
+    async updateStatus(orderId, dto, user) {
         const order = await this.orderModel.findById(orderId);
         if (!order)
             throw new common_1.NotFoundException('Order not found');
+        const isAdmin = user.role === 'admin';
+        const isSeller = order.seller.toString() === user._id.toString();
+        if (!isAdmin && !isSeller) {
+            throw new common_1.ForbiddenException('You do not have permission to update this order');
+        }
         const previousStatus = order.status;
         order.status = dto.status;
         if (dto.notes)
             order.notes = dto.notes;
         await order.save();
         if (dto.status === order_schema_1.OrderStatus.CONFIRMED &&
-            previousStatus !== order_schema_1.OrderStatus.CONFIRMED &&
-            order.promoter &&
-            order.commissionAmount > 0) {
-            await this.createEarning(order);
+            previousStatus !== order_schema_1.OrderStatus.CONFIRMED) {
+            const amountToCredit = order.totalAmount - order.commissionAmount;
+            await this.walletsService.creditWallet(order.seller.toString(), amountToCredit, transaction_schema_1.TransactionPurpose.ORDER_SETTLEMENT, `settle_${order._id}`, `Settlement for order #${order._id.toString().slice(-8)}`);
+            if (order.promoter && order.commissionAmount > 0) {
+                await this.createEarning(order);
+            }
         }
         if (dto.status === order_schema_1.OrderStatus.CANCELLED &&
             previousStatus === order_schema_1.OrderStatus.CONFIRMED &&
@@ -167,6 +193,7 @@ let OrdersService = class OrdersService {
         }
         const populatedEarning = await earning.populate('promoter', 'name email');
         const promoter = populatedEarning.promoter;
+        await this.walletsService.creditWallet(order.promoter.toString(), order.commissionAmount, transaction_schema_1.TransactionPurpose.EARNING, `order_a_${order._id}`, `Commission for Order #${order._id.toString().slice(-6).toUpperCase()}`, { orderId: order._id });
         await this.notificationsService.notifyEarning(promoter._id.toString(), promoter.email, order.commissionAmount, order.product.name || 'a product');
     }
     async findAll(query) {
@@ -255,6 +282,7 @@ exports.OrdersService = OrdersService = __decorate([
         mongoose_2.Model,
         notifications_service_1.NotificationsService,
         paystack_service_1.PaystackService,
-        mail_service_1.MailService])
+        mail_service_1.MailService,
+        wallets_service_1.WalletsService])
 ], OrdersService);
 //# sourceMappingURL=orders.service.js.map

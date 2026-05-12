@@ -1,18 +1,18 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
+import { SeedService } from './common/services/seed.service';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  
+  // Seeding
+  const seedService = app.get(SeedService);
+  await seedService.seed();
 
-  // CORS - allow all 3 frontends
+  // CORS - allow all origins
   app.enableCors({
-    origin: [
-      process.env.STUDENT_URL || 'http://localhost:3001',
-      process.env.SELLER_URL || 'http://localhost:3002',
-      process.env.ADMIN_URL || 'http://localhost:3003',
-      'http://localhost:3000',
-    ],
+    origin: true,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
   });

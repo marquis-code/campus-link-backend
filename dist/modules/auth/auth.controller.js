@@ -29,8 +29,8 @@ let AuthController = class AuthController {
     login(dto) {
         return this.authService.login(dto);
     }
-    firebaseLogin(idToken) {
-        return this.authService.firebaseLogin(idToken);
+    firebaseLogin(body) {
+        return this.authService.firebaseLogin(body.idToken, body.role);
     }
     getProfile(userId) {
         return this.authService.getProfile(userId);
@@ -40,6 +40,12 @@ let AuthController = class AuthController {
     }
     changePassword(userId, dto) {
         return this.authService.changePassword(userId, dto);
+    }
+    forgotPassword(dto) {
+        return this.authService.forgotPassword(dto);
+    }
+    resetPassword(dto) {
+        return this.authService.resetPassword(dto);
     }
 };
 exports.AuthController = AuthController;
@@ -59,9 +65,9 @@ __decorate([
 ], AuthController.prototype, "login", null);
 __decorate([
     (0, common_1.Post)('firebase-login'),
-    __param(0, (0, common_1.Body)('idToken')),
+    __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "firebaseLogin", null);
 __decorate([
@@ -90,6 +96,20 @@ __decorate([
     __metadata("design:paramtypes", [String, auth_dto_1.ChangePasswordDto]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "changePassword", null);
+__decorate([
+    (0, common_1.Post)('forgot-password'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [auth_dto_1.ForgotPasswordDto]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "forgotPassword", null);
+__decorate([
+    (0, common_1.Post)('reset-password'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [auth_dto_1.ResetPasswordDto]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "resetPassword", null);
 exports.AuthController = AuthController = __decorate([
     (0, common_1.Controller)('auth'),
     __metadata("design:paramtypes", [auth_service_1.AuthService])

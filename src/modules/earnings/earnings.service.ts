@@ -4,11 +4,18 @@ import { Model, Types } from 'mongoose';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { Cache } from 'cache-manager';
 import { Earning, EarningDocument } from '../../schemas/earning.schema';
+import { Order, OrderDocument } from '../../schemas/order.schema';
+import { Withdrawal, WithdrawalDocument } from '../../schemas/withdrawal.schema';
+
+import { WalletsService } from '../wallets/wallets.service';
 
 @Injectable()
 export class EarningsService {
   constructor(
     @InjectModel(Earning.name) private earningModel: Model<EarningDocument>,
+    @InjectModel(Order.name) private orderModel: Model<OrderDocument>,
+    @InjectModel(Withdrawal.name) private withdrawalModel: Model<WithdrawalDocument>,
+    private walletsService: WalletsService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
@@ -57,12 +64,15 @@ export class EarningsService {
       promoter: promoterObjId,
     } as any);
 
+    const wallet = await this.walletsService.getOrCreateWallet(promoterId);
+
     const summary = {
       totalEarnings,
       pendingEarnings,
       availableEarnings,
       paidEarnings,
       totalSales,
+      walletBalance: wallet.balance,
     };
 
     // Cache for 2 minutes — earnings change more frequently
@@ -85,6 +95,50 @@ export class EarningsService {
       this.earningModel.countDocuments(),
     ]);
     return { earnings, total, page, pages: Math.ceil(total / limit) };
+  }
+
+  async getSellerEarningsSummary(sellerId: string) {
+    const cacheKey = `seller_earnings_summary_${sellerId}`;
+    const cached: any = await this.cacheManager.get(cacheKey);
+    if (cached) return cached;
+
+    const sellerObjId = new Types.ObjectId(sellerId);
+
+    // Total from confirmed orders (seller revenue = totalAmount - commissionAmount)
+    const [confirmedResult, pendingResult, paidResult] = await Promise.all([
+      this.orderModel.aggregate([
+        { $match: { seller: sellerObjId, status: 'confirmed' } },
+        { $group: { _id: null, total: { $sum: { $subtract: ['$totalAmount', '$commissionAmount'] } }, count: { $sum: 1 } } },
+      ]),
+      this.orderModel.aggregate([
+        { $match: { seller: sellerObjId, status: { $in: ['pending', 'processing'] } } },
+        { $group: { _id: null, total: { $sum: { $subtract: ['$totalAmount', '$commissionAmount'] } } } },
+      ]),
+      this.withdrawalModel.aggregate([
+        { $match: { user: sellerObjId, status: { $in: ['approved', 'completed'] } } },
+        { $group: { _id: null, total: { $sum: '$amount' } } },
+      ]),
+    ]);
+
+    const totalEarnings = confirmedResult[0]?.total || 0;
+    const pendingEarnings = pendingResult[0]?.total || 0;
+    const paidEarnings = paidResult[0]?.total || 0;
+    const availableEarnings = Math.max(0, totalEarnings - paidEarnings);
+    const totalSales = confirmedResult[0]?.count || 0;
+
+    const wallet = await this.walletsService.getOrCreateWallet(sellerId);
+
+    const summary = {
+      totalEarnings,
+      pendingEarnings,
+      availableEarnings,
+      paidEarnings,
+      totalSales,
+      walletBalance: wallet.balance,
+    };
+
+    await this.cacheManager.set(cacheKey, summary, 120000);
+    return summary;
   }
 
   async markEarningsAsPaid(promoterId: string, amount: number) {

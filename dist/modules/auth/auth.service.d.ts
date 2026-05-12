@@ -1,7 +1,7 @@
 import { Model } from 'mongoose';
 import { JwtService } from '@nestjs/jwt';
 import { User, UserDocument } from '../../schemas/user.schema';
-import { SignupDto, LoginDto, UpdateProfileDto, ChangePasswordDto } from './dto/auth.dto';
+import { SignupDto, LoginDto, UpdateProfileDto, ChangePasswordDto, ForgotPasswordDto, ResetPasswordDto } from './dto/auth.dto';
 import { FirebaseService } from '../firebase/firebase.service';
 import { MailService } from '../mail/mail.service';
 export declare class AuthService {
@@ -10,7 +10,7 @@ export declare class AuthService {
     private firebaseService;
     private mailService;
     constructor(userModel: Model<UserDocument>, jwtService: JwtService, firebaseService: FirebaseService, mailService: MailService);
-    firebaseLogin(idToken: string): Promise<{
+    firebaseLogin(idToken: string, role?: string): Promise<{
         user: any;
         token: string;
     }>;
@@ -40,6 +40,12 @@ export declare class AuthService {
     }> & {
         __v: number;
     }) | null>;
+    forgotPassword(dto: ForgotPasswordDto): Promise<{
+        message: string;
+    }>;
+    resetPassword(dto: ResetPasswordDto): Promise<{
+        message: string;
+    }>;
     private generateToken;
     private sanitizeUser;
 }

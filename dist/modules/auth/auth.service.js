@@ -65,7 +65,7 @@ let AuthService = class AuthService {
         this.firebaseService = firebaseService;
         this.mailService = mailService;
     }
-    async firebaseLogin(idToken) {
+    async firebaseLogin(idToken, role) {
         const decodedToken = await this.firebaseService.verifyIdToken(idToken);
         const { email, uid, name, picture } = decodedToken;
         if (!email) {
@@ -80,7 +80,7 @@ let AuthService = class AuthService {
                 name: name || email.split('@')[0],
                 firebaseUid: uid,
                 avatar: picture || '',
-                role: user_schema_1.UserRole.STUDENT,
+                role: role || user_schema_1.UserRole.STUDENT,
                 isActive: true,
             });
             this.mailService.sendWelcomeEmail(email, user.name).catch(() => { });
@@ -177,6 +177,45 @@ let AuthService = class AuthService {
     }
     async validateUserById(userId) {
         return this.userModel.findById(userId).select('-password').lean();
+    }
+    async forgotPassword(dto) {
+        const user = await this.userModel.findOne({ email: dto.email.toLowerCase() });
+        if (!user) {
+            return { message: 'If an account with that email exists, we sent a password reset link.' };
+        }
+        if (!user.password) {
+            return { message: 'This account uses Google sign-in. Please log in with Google instead.' };
+        }
+        const resetToken = this.jwtService.sign({ sub: user._id, email: user.email, type: 'password_reset' }, { expiresIn: '15m' });
+        const resetUrl = `${process.env.STUDENT_URL || 'http://localhost:3002'}/reset-password?token=${resetToken}`;
+        try {
+            await this.mailService.sendPasswordResetEmail(user.email, user.name, resetUrl);
+        }
+        catch (e) {
+            console.error('Failed to send reset email:', e.message);
+        }
+        return { message: 'If an account with that email exists, we sent a password reset link.' };
+    }
+    async resetPassword(dto) {
+        try {
+            const decoded = this.jwtService.verify(dto.token);
+            if (decoded.type !== 'password_reset') {
+                throw new common_1.BadRequestException('Invalid reset token.');
+            }
+            const user = await this.userModel.findById(decoded.sub);
+            if (!user) {
+                throw new common_1.BadRequestException('User not found.');
+            }
+            const salt = await bcrypt.genSalt(10);
+            user.password = await bcrypt.hash(dto.newPassword, salt);
+            await user.save();
+            return { message: 'Password has been reset successfully. You can now sign in.' };
+        }
+        catch (e) {
+            if (e instanceof common_1.BadRequestException)
+                throw e;
+            throw new common_1.BadRequestException('Reset link has expired or is invalid. Please request a new one.');
+        }
     }
     generateToken(user) {
         const payload = {

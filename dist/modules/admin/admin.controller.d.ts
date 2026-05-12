@@ -56,4 +56,24 @@ export declare class AdminController {
     }> & {
         __v: number;
     })[]>;
+    getAllTransactions(page?: number, limit?: number): Promise<{
+        transactions: (import("../../schemas/transaction.schema").Transaction & import("mongoose").Document<import("mongoose").Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
+            _id: import("mongoose").Types.ObjectId;
+        }> & {
+            __v: number;
+        })[];
+        total: number;
+        page: number;
+        pages: number;
+    }>;
+    getAllWallets(page?: number, limit?: number): Promise<{
+        wallets: (import("../../schemas/wallet.schema").Wallet & import("mongoose").Document<import("mongoose").Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
+            _id: import("mongoose").Types.ObjectId;
+        }> & {
+            __v: number;
+        })[];
+        total: number;
+        page: number;
+        pages: number;
+    }>;
 }

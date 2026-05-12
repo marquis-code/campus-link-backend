@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
@@ -9,10 +10,12 @@ import { Order, OrderDocument, OrderStatus } from '../../schemas/order.schema';
 import { Product, ProductDocument } from '../../schemas/product.schema';
 import { Referral, ReferralDocument } from '../../schemas/referral.schema';
 import { Earning, EarningDocument } from '../../schemas/earning.schema';
+import { TransactionPurpose } from '../../schemas/transaction.schema';
 import { CreateOrderDto, UpdateOrderStatusDto, OrderQueryDto } from './dto/order.dto';
 import { NotificationsService } from '../notifications/notifications.service';
 import { MailService } from '../mail/mail.service';
 import { PaystackService } from '../../shared/services/paystack.service';
+import { WalletsService } from '../wallets/wallets.service';
 
 @Injectable()
 export class OrdersService {
@@ -24,6 +27,7 @@ export class OrdersService {
     private notificationsService: NotificationsService,
     private paystackService: PaystackService,
     private mailService: MailService,
+    private walletsService: WalletsService,
   ) {}
 
   async create(dto: CreateOrderDto) {
@@ -35,6 +39,20 @@ export class OrdersService {
 
     const quantity = dto.quantity || 1;
     const totalAmount = product.price * quantity;
+
+    // Calculate Paystack charge (customer bears it)
+    // Paystack fee: 1.5% + (N100 if > N2500)
+    // Formula to ensure merchant receives totalAmount:
+    // P = (M + 100) / 0.985
+    let fee = 0;
+    let totalPayable = totalAmount;
+    
+    if (totalAmount > 0) {
+      const isAboveThreshold = totalAmount > 2500;
+      const flatFee = isAboveThreshold ? 100 : 0;
+      totalPayable = Math.ceil((totalAmount + flatFee) / (1 - 0.015));
+      fee = totalPayable - totalAmount;
+    }
 
     let promoterId: Types.ObjectId | undefined;
     let referralId: Types.ObjectId | undefined;
@@ -60,11 +78,13 @@ export class OrdersService {
       buyerEmail: dto.buyerEmail,
       quantity,
       totalAmount,
+      fee,
+      totalPayable,
       commissionAmount: promoterId ? product.commissionAmount * quantity : 0,
       notes: dto.notes,
     } as any);
 
-    // Create Paystack Virtual Account if email is provided
+    // Create Paystack integration if email is provided
     if (dto.buyerEmail) {
       try {
         const customer = await this.paystackService.createCustomer(
@@ -73,6 +93,27 @@ export class OrdersService {
           dto.buyerName.split(' ')[1] || '',
           dto.buyerPhone,
         );
+
+        if (dto.paymentMethod === 'paystack') {
+          // Initialize Paystack Card Payment
+          const payment = await this.paystackService.initializeTransaction(
+            dto.buyerEmail,
+            totalPayable,
+            `order_${order._id}`,
+            process.env.STUDENT_URL ? `${process.env.STUDENT_URL}/orders/success` : undefined
+          );
+          
+          await this.orderModel.findByIdAndUpdate(order._id, {
+            paymentReference: payment.reference,
+          });
+
+          return {
+            ...order.toObject(),
+            checkoutUrl: payment.authorization_url,
+          };
+        }
+
+        // Default: Create DVA for Bank Transfer
         const dva = await this.paystackService.createVirtualAccount(customer.customer_code);
         
         await this.orderModel.findByIdAndUpdate(order._id, {
@@ -88,16 +129,23 @@ export class OrdersService {
           'Order Received - Payment Details',
           `<h1>Hello ${dto.buyerName}</h1>
            <p>Thank you for your order of <b>${product.name}</b>.</p>
-           <p>Please make a bank transfer of <b>₦${totalAmount.toLocaleString()}</b> to the following account:</p>
-           <ul>
-             <li><b>Bank:</b> ${dva.bank.name}</li>
-             <li><b>Account Number:</b> ${dva.account_number}</li>
-             <li><b>Account Name:</b> ${dva.account_name}</li>
+           <p>Please make a bank transfer of <b>₦${totalPayable.toLocaleString()}</b> to the following account:</p>
+           <div style="background: #f9fafb; padding: 20px; border-radius: 12px; margin: 20px 0;">
+             <p style="margin: 0; font-size: 12px; color: #6b7280;">Bank Details</p>
+             <p style="margin: 5px 0; font-size: 18px; font-weight: bold; color: #111827;">${dva.bank.name}</p>
+             <p style="margin: 5px 0; font-size: 24px; font-weight: 800; color: #4f46e5; letter-spacing: 1px;">${dva.account_number}</p>
+             <p style="margin: 5px 0; font-size: 14px; font-weight: 600; color: #374151;">${dva.account_name}</p>
+           </div>
+           <p style="font-size: 13px; color: #6b7280;">Payment Breakdown:</p>
+           <ul style="font-size: 13px; color: #374151;">
+             <li>Product Price: ₦${totalAmount.toLocaleString()}</li>
+             <li>Transfer Charge: ₦${fee.toLocaleString()}</li>
+             <li><b>Total Payable: ₦${totalPayable.toLocaleString()}</b></li>
            </ul>
            <p>Your order will be processed as soon as payment is confirmed.</p>`
         );
       } catch (err) {
-        console.error('Paystack DVA creation failed', err);
+        console.error('Paystack integration failed', err);
       }
     }
 
@@ -113,20 +161,6 @@ export class OrdersService {
       totalAmount
     );
 
-    // Notify promoter if applicable
-    if (promoterId) {
-      const promoter = await this.orderModel.findById(order._id).populate('promoter', 'name email');
-      if (promoter && promoter.promoter) {
-        await this.notificationsService.create({
-          user: promoterId.toString(),
-          title: 'Someone ordered through your link! 🚀',
-          message: `Your referral for ${product.name} just got an order`,
-          type: 'order',
-          emailAddress: (promoter.promoter as any).email,
-        });
-      }
-    }
-
     return this.orderModel
       .findById(order._id)
       .populate('product', 'name price images')
@@ -135,9 +169,17 @@ export class OrdersService {
       .lean();
   }
 
-  async updateStatus(orderId: string, dto: UpdateOrderStatusDto, userId: string) {
+  async updateStatus(orderId: string, dto: UpdateOrderStatusDto, user: any) {
     const order = await this.orderModel.findById(orderId);
     if (!order) throw new NotFoundException('Order not found');
+
+    // Ownership check: only the seller or an admin can update order status
+    const isAdmin = user.role === 'admin';
+    const isSeller = order.seller.toString() === user._id.toString();
+
+    if (!isAdmin && !isSeller) {
+      throw new ForbiddenException('You do not have permission to update this order');
+    }
 
     const previousStatus = order.status;
     order.status = dto.status;
@@ -147,11 +189,22 @@ export class OrdersService {
     // When order is confirmed and there's a promoter → create earnings
     if (
       dto.status === OrderStatus.CONFIRMED &&
-      previousStatus !== OrderStatus.CONFIRMED &&
-      order.promoter &&
-      order.commissionAmount > 0
+      previousStatus !== OrderStatus.CONFIRMED
     ) {
-      await this.createEarning(order);
+      // Credit seller's wallet: amount = totalAmount - commissionAmount
+      const amountToCredit = order.totalAmount - order.commissionAmount;
+      await this.walletsService.creditWallet(
+        order.seller.toString(),
+        amountToCredit,
+        TransactionPurpose.ORDER_SETTLEMENT,
+        `settle_${order._id}`,
+        `Settlement for order #${order._id.toString().slice(-8)}`
+      );
+
+      // Create earnings for promoter if applicable
+      if (order.promoter && order.commissionAmount > 0) {
+        await this.createEarning(order);
+      }
     }
 
     // When order is cancelled and was previously confirmed → handle earnings
@@ -203,6 +256,16 @@ export class OrdersService {
     const populatedEarning = await earning.populate('promoter', 'name email');
     const promoter = populatedEarning.promoter as any;
     
+    // Credit promoter's wallet
+    await this.walletsService.creditWallet(
+      order.promoter.toString(),
+      order.commissionAmount,
+      TransactionPurpose.EARNING,
+      `order_a_${order._id}`,
+      `Commission for Order #${order._id.toString().slice(-6).toUpperCase()}`,
+      { orderId: order._id }
+    );
+
     await this.notificationsService.notifyEarning(
       promoter._id.toString(),
       promoter.email,

@@ -47,7 +47,7 @@ let UploadController = class UploadController {
 };
 exports.UploadController = UploadController;
 __decorate([
-    (0, common_1.Post)(),
+    (0, common_1.Post)('single'),
     (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('file', multerOptions)),
     __param(0, (0, common_1.UploadedFile)()),
     __metadata("design:type", Function),
@@ -56,7 +56,7 @@ __decorate([
 ], UploadController.prototype, "uploadSingle", null);
 __decorate([
     (0, common_1.Post)('multiple'),
-    (0, common_1.UseInterceptors)((0, platform_express_1.FilesInterceptor)('files', 5, multerOptions)),
+    (0, common_1.UseInterceptors)((0, platform_express_1.FilesInterceptor)('files', 10, multerOptions)),
     __param(0, (0, common_1.UploadedFiles)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Array]),

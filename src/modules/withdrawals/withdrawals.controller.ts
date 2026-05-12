@@ -15,15 +15,16 @@ import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { UserRole } from '../../schemas/user.schema';
+import { ParseObjectIdPipe } from '../../common/pipes/parse-object-id.pipe';
 
 @Controller('withdrawals')
 export class WithdrawalsController {
   constructor(private withdrawalsService: WithdrawalsService) {}
 
-  // Student: request withdrawal
+  // Student/Seller: request withdrawal
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.STUDENT)
+  @Roles(UserRole.STUDENT, UserRole.SELLER)
   create(
     @CurrentUser('_id') userId: string,
     @Body() dto: CreateWithdrawalDto,
@@ -31,10 +32,11 @@ export class WithdrawalsController {
     return this.withdrawalsService.create(userId, dto);
   }
 
-  // Student: my withdrawal history
+  // Student/Seller: my withdrawal history
+  @Get('me')
   @Get('mine')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.STUDENT)
+  @Roles(UserRole.STUDENT, UserRole.SELLER)
   findMine(@CurrentUser('_id') userId: string) {
     return this.withdrawalsService.findMyWithdrawals(userId);
   }
@@ -56,7 +58,7 @@ export class WithdrawalsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   updateStatus(
-    @Param('id') id: string,
+    @Param('id', ParseObjectIdPipe) id: string,
     @CurrentUser('_id') adminId: string,
     @Body() dto: UpdateWithdrawalStatusDto,
   ) {

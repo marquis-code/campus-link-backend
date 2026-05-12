@@ -16,10 +16,13 @@ import { UploadModule } from './modules/upload/upload.module';
 import { ChatModule } from './modules/chat/chat.module';
 import { MailModule } from './modules/mail/mail.module';
 import { FirebaseModule } from './modules/firebase/firebase.module';
+import { SeedModule } from './common/services/seed.module';
 
 import { CacheModule } from '@nestjs/cache-manager';
 import * as redisStore from 'cache-manager-redis-yet';
 import { SharedModule } from './shared/services/shared.module';
+import { PaymentsModule } from './modules/payments/payments.module';
+import { WalletsModule } from './modules/wallets/wallets.module';
 
 @Module({
   imports: [
@@ -34,11 +37,42 @@ import { SharedModule } from './shared/services/shared.module';
     CacheModule.registerAsync({
       isGlobal: true,
       imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
-        store: await redisStore.redisStore({
-          url: configService.get('REDIS_URL') || 'redis://localhost:6379',
-        }),
-      }),
+      useFactory: async (configService: ConfigService) => {
+        const redisUrl = configService.get('REDIS_URL');
+        
+        if (!redisUrl || redisUrl === 'memory') {
+          console.log('Using in-memory cache');
+          return { ttl: 600 };
+        }
+
+        try {
+          const store = await redisStore.redisStore({
+            url: redisUrl,
+            socket: {
+              connectTimeout: 5000,
+              reconnectStrategy: (retries) => {
+                if (retries > 5) {
+                  console.warn('Redis reconnection failed too many times. Continuing with broken cache.');
+                  return false;
+                }
+                return Math.min(retries * 100, 3000);
+              }
+            }
+          });
+
+          // Aggressively catch client errors to prevent process crash
+          if (store.client) {
+            store.client.on('error', (err: any) => {
+              console.error('Redis Client Error (Non-Fatal):', err.message);
+            });
+          }
+
+          return { store };
+        } catch (e) {
+          console.error('Failed to connect to Redis, falling back to memory cache:', e.message);
+          return { ttl: 600 };
+        }
+      },
       inject: [ConfigService],
     }),
     SharedModule,
@@ -57,6 +91,9 @@ import { SharedModule } from './shared/services/shared.module';
     ChatModule,
     MailModule,
     FirebaseModule,
+    SeedModule,
+    PaymentsModule,
+    WalletsModule,
   ],
 })
 export class AppModule {}

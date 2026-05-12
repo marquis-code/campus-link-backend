@@ -36,7 +36,7 @@ let ReferralsService = class ReferralsService {
         if (product.status !== 'active') {
             throw new common_1.BadRequestException('Product is not active');
         }
-        if (product.seller.toString() === promoterId) {
+        if (product.seller.toString() === promoterId.toString()) {
             throw new common_1.BadRequestException('You cannot promote your own product');
         }
         const existing = await this.referralModel.findOne({
@@ -46,7 +46,7 @@ let ReferralsService = class ReferralsService {
         if (existing) {
             return this.referralModel
                 .findById(existing._id)
-                .populate('product', 'name price commissionAmount images')
+                .populate('product', 'name price commissionAmount images description category')
                 .populate('promoter', 'name email')
                 .lean();
         }
@@ -59,7 +59,7 @@ let ReferralsService = class ReferralsService {
         await this.productsService.incrementPromoters(productId);
         return this.referralModel
             .findById(referral._id)
-            .populate('product', 'name price commissionAmount images')
+            .populate('product', 'name price commissionAmount images description category')
             .populate('promoter', 'name email')
             .lean();
     }
@@ -106,6 +106,16 @@ let ReferralsService = class ReferralsService {
         await this.referralModel.findByIdAndUpdate(referralId, {
             $inc: { orders: 1, earnings: commissionAmount },
         });
+    }
+    async remove(promoterId, referralId) {
+        const referral = await this.referralModel.findOne({
+            _id: new mongoose_2.Types.ObjectId(referralId),
+            promoter: new mongoose_2.Types.ObjectId(promoterId),
+        });
+        if (!referral)
+            throw new common_1.NotFoundException('Referral asset not found');
+        await this.productsService.decrementPromoters(referral.product.toString());
+        return this.referralModel.findByIdAndDelete(referralId);
     }
 };
 exports.ReferralsService = ReferralsService;

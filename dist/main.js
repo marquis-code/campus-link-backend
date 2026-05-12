@@ -3,15 +3,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const core_1 = require("@nestjs/core");
 const common_1 = require("@nestjs/common");
 const app_module_1 = require("./app.module");
+const seed_service_1 = require("./common/services/seed.service");
 async function bootstrap() {
     const app = await core_1.NestFactory.create(app_module_1.AppModule);
+    const seedService = app.get(seed_service_1.SeedService);
+    await seedService.seed();
     app.enableCors({
-        origin: [
-            process.env.STUDENT_URL || 'http://localhost:3001',
-            process.env.SELLER_URL || 'http://localhost:3002',
-            process.env.ADMIN_URL || 'http://localhost:3003',
-            'http://localhost:3000',
-        ],
+        origin: true,
         methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
         credentials: true,
     });

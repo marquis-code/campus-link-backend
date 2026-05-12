@@ -18,11 +18,20 @@ const mongoose_1 = require("@nestjs/mongoose");
 const mongoose_2 = require("mongoose");
 const cache_manager_1 = require("@nestjs/cache-manager");
 const earning_schema_1 = require("../../schemas/earning.schema");
+const order_schema_1 = require("../../schemas/order.schema");
+const withdrawal_schema_1 = require("../../schemas/withdrawal.schema");
+const wallets_service_1 = require("../wallets/wallets.service");
 let EarningsService = class EarningsService {
     earningModel;
+    orderModel;
+    withdrawalModel;
+    walletsService;
     cacheManager;
-    constructor(earningModel, cacheManager) {
+    constructor(earningModel, orderModel, withdrawalModel, walletsService, cacheManager) {
         this.earningModel = earningModel;
+        this.orderModel = orderModel;
+        this.withdrawalModel = withdrawalModel;
+        this.walletsService = walletsService;
         this.cacheManager = cacheManager;
     }
     async findMyEarnings(promoterId) {
@@ -64,12 +73,14 @@ let EarningsService = class EarningsService {
         const totalSales = await this.earningModel.countDocuments({
             promoter: promoterObjId,
         });
+        const wallet = await this.walletsService.getOrCreateWallet(promoterId);
         const summary = {
             totalEarnings,
             pendingEarnings,
             availableEarnings,
             paidEarnings,
             totalSales,
+            walletBalance: wallet.balance,
         };
         await this.cacheManager.set(cacheKey, summary, 120000);
         return summary;
@@ -89,6 +100,43 @@ let EarningsService = class EarningsService {
             this.earningModel.countDocuments(),
         ]);
         return { earnings, total, page, pages: Math.ceil(total / limit) };
+    }
+    async getSellerEarningsSummary(sellerId) {
+        const cacheKey = `seller_earnings_summary_${sellerId}`;
+        const cached = await this.cacheManager.get(cacheKey);
+        if (cached)
+            return cached;
+        const sellerObjId = new mongoose_2.Types.ObjectId(sellerId);
+        const [confirmedResult, pendingResult, paidResult] = await Promise.all([
+            this.orderModel.aggregate([
+                { $match: { seller: sellerObjId, status: 'confirmed' } },
+                { $group: { _id: null, total: { $sum: { $subtract: ['$totalAmount', '$commissionAmount'] } }, count: { $sum: 1 } } },
+            ]),
+            this.orderModel.aggregate([
+                { $match: { seller: sellerObjId, status: { $in: ['pending', 'processing'] } } },
+                { $group: { _id: null, total: { $sum: { $subtract: ['$totalAmount', '$commissionAmount'] } } } },
+            ]),
+            this.withdrawalModel.aggregate([
+                { $match: { user: sellerObjId, status: { $in: ['approved', 'completed'] } } },
+                { $group: { _id: null, total: { $sum: '$amount' } } },
+            ]),
+        ]);
+        const totalEarnings = confirmedResult[0]?.total || 0;
+        const pendingEarnings = pendingResult[0]?.total || 0;
+        const paidEarnings = paidResult[0]?.total || 0;
+        const availableEarnings = Math.max(0, totalEarnings - paidEarnings);
+        const totalSales = confirmedResult[0]?.count || 0;
+        const wallet = await this.walletsService.getOrCreateWallet(sellerId);
+        const summary = {
+            totalEarnings,
+            pendingEarnings,
+            availableEarnings,
+            paidEarnings,
+            totalSales,
+            walletBalance: wallet.balance,
+        };
+        await this.cacheManager.set(cacheKey, summary, 120000);
+        return summary;
     }
     async markEarningsAsPaid(promoterId, amount) {
         const earnings = await this.earningModel
@@ -115,7 +163,12 @@ exports.EarningsService = EarningsService;
 exports.EarningsService = EarningsService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, mongoose_1.InjectModel)(earning_schema_1.Earning.name)),
-    __param(1, (0, common_1.Inject)(cache_manager_1.CACHE_MANAGER)),
-    __metadata("design:paramtypes", [mongoose_2.Model, Object])
+    __param(1, (0, mongoose_1.InjectModel)(order_schema_1.Order.name)),
+    __param(2, (0, mongoose_1.InjectModel)(withdrawal_schema_1.Withdrawal.name)),
+    __param(4, (0, common_1.Inject)(cache_manager_1.CACHE_MANAGER)),
+    __metadata("design:paramtypes", [mongoose_2.Model,
+        mongoose_2.Model,
+        mongoose_2.Model,
+        wallets_service_1.WalletsService, Object])
 ], EarningsService);
 //# sourceMappingURL=earnings.service.js.map

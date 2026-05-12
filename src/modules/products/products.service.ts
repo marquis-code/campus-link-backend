@@ -132,7 +132,7 @@ export class ProductsService {
   async update(id: string, sellerId: string, dto: UpdateProductDto) {
     const product = await this.productModel.findById(id);
     if (!product) throw new NotFoundException('Product not found');
-    if (product.seller.toString() !== sellerId) {
+    if (product.seller.toString() !== sellerId.toString()) {
       throw new ForbiddenException('You can only update your own products');
     }
 
@@ -180,7 +180,7 @@ export class ProductsService {
     const product = await this.productModel.findById(id);
     if (!product) throw new NotFoundException('Product not found');
 
-    if (!isAdmin && product.seller.toString() !== userId) {
+    if (!isAdmin && product.seller.toString() !== userId.toString()) {
       throw new ForbiddenException('You can only delete your own products');
     }
 
@@ -197,6 +197,12 @@ export class ProductsService {
   async incrementPromoters(productId: string) {
     await this.productModel.findByIdAndUpdate(productId, {
       $inc: { totalPromoters: 1 },
+    });
+  }
+
+  async decrementPromoters(productId: string) {
+    await this.productModel.findByIdAndUpdate(productId, {
+      $inc: { totalPromoters: -1 },
     });
   }
 

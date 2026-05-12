@@ -27,9 +27,9 @@ export class SendMessageDto {
 }
 
 export class CreateConversationDto {
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  participantId: string;
+  participantId?: string;
 
   @IsOptional()
   @IsString()
@@ -37,4 +37,11 @@ export class CreateConversationDto {
 
   @IsOptional()
   isSupport?: boolean;
+
+  @IsOptional()
+  guestInfo?: {
+    name: string;
+    email: string;
+    phone: string;
+  };
 }

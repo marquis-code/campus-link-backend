@@ -3,6 +3,7 @@ export declare class CreateWithdrawalDto {
     bankName?: string;
     bankAccountNumber?: string;
     bankAccountName?: string;
+    bankCode?: string;
 }
 export declare class UpdateWithdrawalStatusDto {
     status: string;

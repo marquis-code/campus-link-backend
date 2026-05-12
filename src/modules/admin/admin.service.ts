@@ -7,6 +7,8 @@ import { Order, OrderDocument } from '../../schemas/order.schema';
 import { Earning, EarningDocument } from '../../schemas/earning.schema';
 import { Referral, ReferralDocument } from '../../schemas/referral.schema';
 import { Withdrawal, WithdrawalDocument } from '../../schemas/withdrawal.schema';
+import { Wallet, WalletDocument } from '../../schemas/wallet.schema';
+import { Transaction, TransactionDocument } from '../../schemas/transaction.schema';
 
 @Injectable()
 export class AdminService {
@@ -17,7 +19,39 @@ export class AdminService {
     @InjectModel(Earning.name) private earningModel: Model<EarningDocument>,
     @InjectModel(Referral.name) private referralModel: Model<ReferralDocument>,
     @InjectModel(Withdrawal.name) private withdrawalModel: Model<WithdrawalDocument>,
+    @InjectModel(Wallet.name) private walletModel: Model<WalletDocument>,
+    @InjectModel(Transaction.name) private transactionModel: Model<TransactionDocument>,
   ) {}
+
+  async getAllTransactions(page = 1, limit = 20) {
+    const skip = (page - 1) * limit;
+    const [transactions, total] = await Promise.all([
+      this.transactionModel
+        .find()
+        .populate('user', 'name email role')
+        .sort('-createdAt')
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      this.transactionModel.countDocuments(),
+    ]);
+    return { transactions, total, page, pages: Math.ceil(total / limit) };
+  }
+
+  async getAllWallets(page = 1, limit = 20) {
+    const skip = (page - 1) * limit;
+    const [wallets, total] = await Promise.all([
+      this.walletModel
+        .find()
+        .populate('user', 'name email role')
+        .sort('-balance')
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      this.walletModel.countDocuments(),
+    ]);
+    return { wallets, total, page, pages: Math.ceil(total / limit) };
+  }
 
   async getStats() {
     const [

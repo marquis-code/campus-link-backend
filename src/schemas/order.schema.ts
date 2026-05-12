@@ -48,6 +48,12 @@ export class Order {
   @Prop({ default: 0 })
   commissionAmount: number;
 
+  @Prop({ default: 0 })
+  fee: number;
+
+  @Prop({ default: 0 })
+  totalPayable: number;
+
   @Prop({ enum: OrderStatus, default: OrderStatus.PENDING })
   status: OrderStatus;
 
@@ -65,6 +71,9 @@ export class Order {
 
   @Prop()
   paymentReference: string;
+
+  @Prop()
+  paidAt: Date;
 
   @Prop()
   notes: string;

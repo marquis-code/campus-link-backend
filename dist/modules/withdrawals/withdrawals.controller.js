@@ -21,6 +21,7 @@ const roles_guard_1 = require("../../common/guards/roles.guard");
 const roles_decorator_1 = require("../../common/decorators/roles.decorator");
 const current_user_decorator_1 = require("../../common/decorators/current-user.decorator");
 const user_schema_1 = require("../../schemas/user.schema");
+const parse_object_id_pipe_1 = require("../../common/pipes/parse-object-id.pipe");
 let WithdrawalsController = class WithdrawalsController {
     withdrawalsService;
     constructor(withdrawalsService) {
@@ -43,7 +44,7 @@ exports.WithdrawalsController = WithdrawalsController;
 __decorate([
     (0, common_1.Post)(),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(user_schema_1.UserRole.STUDENT),
+    (0, roles_decorator_1.Roles)(user_schema_1.UserRole.STUDENT, user_schema_1.UserRole.SELLER),
     __param(0, (0, current_user_decorator_1.CurrentUser)('_id')),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -51,9 +52,10 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], WithdrawalsController.prototype, "create", null);
 __decorate([
+    (0, common_1.Get)('me'),
     (0, common_1.Get)('mine'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(user_schema_1.UserRole.STUDENT),
+    (0, roles_decorator_1.Roles)(user_schema_1.UserRole.STUDENT, user_schema_1.UserRole.SELLER),
     __param(0, (0, current_user_decorator_1.CurrentUser)('_id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
@@ -74,7 +76,7 @@ __decorate([
     (0, common_1.Patch)(':id/status'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)(user_schema_1.UserRole.ADMIN),
-    __param(0, (0, common_1.Param)('id')),
+    __param(0, (0, common_1.Param)('id', parse_object_id_pipe_1.ParseObjectIdPipe)),
     __param(1, (0, current_user_decorator_1.CurrentUser)('_id')),
     __param(2, (0, common_1.Body)()),
     __metadata("design:type", Function),

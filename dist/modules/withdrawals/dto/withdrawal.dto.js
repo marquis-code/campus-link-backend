@@ -17,6 +17,7 @@ class CreateWithdrawalDto {
     bankName;
     bankAccountNumber;
     bankAccountName;
+    bankCode;
 }
 exports.CreateWithdrawalDto = CreateWithdrawalDto;
 __decorate([
@@ -40,6 +41,11 @@ __decorate([
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], CreateWithdrawalDto.prototype, "bankAccountName", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], CreateWithdrawalDto.prototype, "bankCode", void 0);
 class UpdateWithdrawalStatusDto {
     status;
     adminNote;

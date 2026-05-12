@@ -5,6 +5,8 @@ import { Order, OrderDocument } from '../../schemas/order.schema';
 import { EarningDocument } from '../../schemas/earning.schema';
 import { ReferralDocument } from '../../schemas/referral.schema';
 import { WithdrawalDocument } from '../../schemas/withdrawal.schema';
+import { Wallet, WalletDocument } from '../../schemas/wallet.schema';
+import { Transaction, TransactionDocument } from '../../schemas/transaction.schema';
 export declare class AdminService {
     private userModel;
     private productModel;
@@ -12,7 +14,29 @@ export declare class AdminService {
     private earningModel;
     private referralModel;
     private withdrawalModel;
-    constructor(userModel: Model<UserDocument>, productModel: Model<ProductDocument>, orderModel: Model<OrderDocument>, earningModel: Model<EarningDocument>, referralModel: Model<ReferralDocument>, withdrawalModel: Model<WithdrawalDocument>);
+    private walletModel;
+    private transactionModel;
+    constructor(userModel: Model<UserDocument>, productModel: Model<ProductDocument>, orderModel: Model<OrderDocument>, earningModel: Model<EarningDocument>, referralModel: Model<ReferralDocument>, withdrawalModel: Model<WithdrawalDocument>, walletModel: Model<WalletDocument>, transactionModel: Model<TransactionDocument>);
+    getAllTransactions(page?: number, limit?: number): Promise<{
+        transactions: (Transaction & import("mongoose").Document<Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
+            _id: Types.ObjectId;
+        }> & {
+            __v: number;
+        })[];
+        total: number;
+        page: number;
+        pages: number;
+    }>;
+    getAllWallets(page?: number, limit?: number): Promise<{
+        wallets: (Wallet & import("mongoose").Document<Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
+            _id: Types.ObjectId;
+        }> & {
+            __v: number;
+        })[];
+        total: number;
+        page: number;
+        pages: number;
+    }>;
     getStats(): Promise<{
         users: {
             total: number;

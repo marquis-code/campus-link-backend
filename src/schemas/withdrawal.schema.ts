@@ -9,6 +9,8 @@ export enum WithdrawalStatus {
   REJECTED = 'rejected',
   PROCESSING = 'processing',
   COMPLETED = 'completed',
+  FAILED = 'failed',
+  REVERSED = 'reversed',
 }
 
 @Schema({ timestamps: true })
@@ -27,6 +29,15 @@ export class Withdrawal {
 
   @Prop()
   bankAccountName: string;
+
+  @Prop()
+  bankCode: string;
+
+  @Prop()
+  recipientCode: string;
+
+  @Prop()
+  transferReference: string;
 
   @Prop({ enum: WithdrawalStatus, default: WithdrawalStatus.PENDING })
   status: WithdrawalStatus;

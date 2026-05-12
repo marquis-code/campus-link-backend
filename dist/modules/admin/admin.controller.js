@@ -19,6 +19,7 @@ const jwt_auth_guard_1 = require("../../common/guards/jwt-auth.guard");
 const roles_guard_1 = require("../../common/guards/roles.guard");
 const roles_decorator_1 = require("../../common/decorators/roles.decorator");
 const user_schema_1 = require("../../schemas/user.schema");
+const parse_object_id_pipe_1 = require("../../common/pipes/parse-object-id.pipe");
 let AdminController = class AdminController {
     adminService;
     constructor(adminService) {
@@ -42,6 +43,12 @@ let AdminController = class AdminController {
     getTopProducts(limit) {
         return this.adminService.getTopProducts(limit);
     }
+    getAllTransactions(page, limit) {
+        return this.adminService.getAllTransactions(page, limit);
+    }
+    getAllWallets(page, limit) {
+        return this.adminService.getAllWallets(page, limit);
+    }
 };
 exports.AdminController = AdminController;
 __decorate([
@@ -62,7 +69,7 @@ __decorate([
 ], AdminController.prototype, "getUsers", null);
 __decorate([
     (0, common_1.Patch)('users/:id/status'),
-    __param(0, (0, common_1.Param)('id')),
+    __param(0, (0, common_1.Param)('id', parse_object_id_pipe_1.ParseObjectIdPipe)),
     __param(1, (0, common_1.Body)('isActive')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Boolean]),
@@ -89,6 +96,22 @@ __decorate([
     __metadata("design:paramtypes", [Number]),
     __metadata("design:returntype", void 0)
 ], AdminController.prototype, "getTopProducts", null);
+__decorate([
+    (0, common_1.Get)('transactions'),
+    __param(0, (0, common_1.Query)('page')),
+    __param(1, (0, common_1.Query)('limit')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, Number]),
+    __metadata("design:returntype", void 0)
+], AdminController.prototype, "getAllTransactions", null);
+__decorate([
+    (0, common_1.Get)('wallets'),
+    __param(0, (0, common_1.Query)('page')),
+    __param(1, (0, common_1.Query)('limit')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, Number]),
+    __metadata("design:returntype", void 0)
+], AdminController.prototype, "getAllWallets", null);
 exports.AdminController = AdminController = __decorate([
     (0, common_1.Controller)('admin'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),

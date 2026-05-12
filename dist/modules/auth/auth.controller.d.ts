@@ -1,5 +1,5 @@
 import { AuthService } from './auth.service';
-import { SignupDto, LoginDto, UpdateProfileDto, ChangePasswordDto } from './dto/auth.dto';
+import { SignupDto, LoginDto, UpdateProfileDto, ChangePasswordDto, ForgotPasswordDto, ResetPasswordDto } from './dto/auth.dto';
 export declare class AuthController {
     private authService;
     constructor(authService: AuthService);
@@ -11,7 +11,10 @@ export declare class AuthController {
         user: any;
         token: string;
     }>;
-    firebaseLogin(idToken: string): Promise<{
+    firebaseLogin(body: {
+        idToken: string;
+        role?: string;
+    }): Promise<{
         user: any;
         token: string;
     }>;
@@ -26,6 +29,12 @@ export declare class AuthController {
         __v: number;
     }) | null>;
     changePassword(userId: string, dto: ChangePasswordDto): Promise<{
+        message: string;
+    }>;
+    forgotPassword(dto: ForgotPasswordDto): Promise<{
+        message: string;
+    }>;
+    resetPassword(dto: ResetPasswordDto): Promise<{
         message: string;
     }>;
 }

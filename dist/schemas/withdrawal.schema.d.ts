@@ -5,7 +5,9 @@ export declare enum WithdrawalStatus {
     APPROVED = "approved",
     REJECTED = "rejected",
     PROCESSING = "processing",
-    COMPLETED = "completed"
+    COMPLETED = "completed",
+    FAILED = "failed",
+    REVERSED = "reversed"
 }
 export declare class Withdrawal {
     user: Types.ObjectId;
@@ -13,6 +15,9 @@ export declare class Withdrawal {
     bankName: string;
     bankAccountNumber: string;
     bankAccountName: string;
+    bankCode: string;
+    recipientCode: string;
+    transferReference: string;
     status: WithdrawalStatus;
     adminNote: string;
     processedBy: Types.ObjectId;
@@ -64,6 +69,33 @@ export declare const WithdrawalSchema: import("mongoose").Schema<Withdrawal, imp
         id: string;
     }> | undefined;
     bankAccountName?: import("mongoose").SchemaDefinitionProperty<string, Withdrawal, Document<unknown, {}, Withdrawal, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Withdrawal & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & {
+        id: string;
+    }> | undefined;
+    bankCode?: import("mongoose").SchemaDefinitionProperty<string, Withdrawal, Document<unknown, {}, Withdrawal, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Withdrawal & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & {
+        id: string;
+    }> | undefined;
+    recipientCode?: import("mongoose").SchemaDefinitionProperty<string, Withdrawal, Document<unknown, {}, Withdrawal, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Withdrawal & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & {
+        id: string;
+    }> | undefined;
+    transferReference?: import("mongoose").SchemaDefinitionProperty<string, Withdrawal, Document<unknown, {}, Withdrawal, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<Withdrawal & {
         _id: Types.ObjectId;

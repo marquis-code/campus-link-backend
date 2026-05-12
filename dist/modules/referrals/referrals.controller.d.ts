@@ -27,4 +27,11 @@ export declare class ReferralsController {
     }> & {
         __v: number;
     })[]>;
+    remove(userId: string, id: string): Promise<(import("mongoose").Document<unknown, {}, import("../../schemas/referral.schema").ReferralDocument, {}, import("mongoose").DefaultSchemaOptions> & import("../../schemas/referral.schema").Referral & import("mongoose").Document<import("mongoose").Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
+        _id: import("mongoose").Types.ObjectId;
+    }> & {
+        __v: number;
+    } & {
+        id: string;
+    }) | null>;
 }

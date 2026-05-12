@@ -34,23 +34,38 @@ let ChatGateway = ChatGateway_1 = class ChatGateway {
     async handleConnection(client) {
         try {
             const token = client.handshake.auth?.token || client.handshake.query?.token;
-            if (!token) {
+            const guestId = client.handshake.auth?.guestId || client.handshake.query?.guestId;
+            let userId;
+            let role = undefined;
+            if (guestId) {
+                userId = `guest_${guestId}`;
+            }
+            else if (token) {
+                const decoded = this.jwtService.verify(token);
+                userId = decoded.sub;
+                role = decoded.role;
+            }
+            else {
                 client.disconnect();
                 return;
             }
-            const decoded = this.jwtService.verify(token);
-            const userId = decoded.sub;
             client.userId = userId;
+            client.role = role;
             this.socketUsers.set(client.id, userId);
             if (!this.userSockets.has(userId)) {
                 this.userSockets.set(userId, new Set());
             }
             this.userSockets.get(userId).add(client.id);
             client.join(`user_${userId}`);
+            if (role === 'admin') {
+                client.join('admins');
+                this.logger.log(`Chat: Admin ${userId} joined admins room`);
+            }
             this.server.emit('presence', { userId, online: true });
             this.logger.log(`Chat: User ${userId} connected`);
         }
         catch (e) {
+            this.logger.error(`Connection error: ${e.message}`);
             client.disconnect();
         }
     }
@@ -85,13 +100,20 @@ let ChatGateway = ChatGateway_1 = class ChatGateway {
         this.server.to(`conv_${dto.conversationId}`).emit('new_message', message);
         const conversation = await this.chatService.getConversationById(dto.conversationId);
         if (conversation) {
+            if (conversation.isSupport) {
+                this.server.to('admins').emit('message_notification', {
+                    conversationId: dto.conversationId,
+                    message,
+                    senderName: message.sender?.name || message.guestSender?.name || 'Guest',
+                });
+            }
             for (const participant of conversation.participants) {
                 const pId = participant.toString();
                 if (pId !== userId) {
                     this.server.to(`user_${pId}`).emit('message_notification', {
                         conversationId: dto.conversationId,
                         message,
-                        senderName: message.sender?.name || 'Someone',
+                        senderName: message.sender?.name || message.guestSender?.name || 'Someone',
                     });
                 }
             }
@@ -118,6 +140,12 @@ let ChatGateway = ChatGateway_1 = class ChatGateway {
             readBy: userId,
             conversationId: data.conversationId,
         });
+    }
+    notifyNewConversation(conversation) {
+        this.server.to('admins').emit('new_conversation', conversation);
+    }
+    broadcastMessage(conversationId, message) {
+        this.server.to(`conv_${conversationId}`).emit('new_message', message);
     }
     isUserOnline(userId) {
         return this.userSockets.has(userId) && (this.userSockets.get(userId)?.size || 0) > 0;

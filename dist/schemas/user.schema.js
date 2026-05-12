@@ -30,6 +30,7 @@ let User = class User {
     bankName;
     bankAccountNumber;
     bankAccountName;
+    bankCode;
     isActive;
     isVerified;
 };
@@ -78,6 +79,10 @@ __decorate([
     (0, mongoose_1.Prop)(),
     __metadata("design:type", String)
 ], User.prototype, "bankAccountName", void 0);
+__decorate([
+    (0, mongoose_1.Prop)(),
+    __metadata("design:type", String)
+], User.prototype, "bankCode", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ default: true }),
     __metadata("design:type", Boolean)

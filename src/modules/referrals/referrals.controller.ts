@@ -5,6 +5,7 @@ import {
   Param,
   Body,
   UseGuards,
+  Delete,
 } from '@nestjs/common';
 import { ReferralsService } from './referrals.service';
 import { GenerateReferralDto } from './dto/referral.dto';
@@ -13,12 +14,14 @@ import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { UserRole } from '../../schemas/user.schema';
+import { ParseObjectIdPipe } from '../../common/pipes/parse-object-id.pipe';
 
 @Controller('referrals')
 export class ReferralsController {
   constructor(private referralsService: ReferralsService) {}
 
   // Student: generate referral link
+  @Post()
   @Post('generate')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.STUDENT)
@@ -30,6 +33,7 @@ export class ReferralsController {
   }
 
   // Student: get my referrals
+  @Get('me')
   @Get('mine')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.STUDENT)
@@ -46,7 +50,18 @@ export class ReferralsController {
   // Seller/Admin: get referrals for a product
   @Get('product/:id')
   @UseGuards(JwtAuthGuard)
-  findByProduct(@Param('id') id: string) {
+  findByProduct(@Param('id', ParseObjectIdPipe) id: string) {
     return this.referralsService.findByProduct(id);
+  }
+
+  // Student: delete/archive referral
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.STUDENT)
+  remove(
+    @CurrentUser('_id') userId: string,
+    @Param('id', ParseObjectIdPipe) id: string,
+  ) {
+    return this.referralsService.remove(userId, id);
   }
 }

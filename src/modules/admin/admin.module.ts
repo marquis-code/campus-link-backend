@@ -8,6 +8,8 @@ import { Order, OrderSchema } from '../../schemas/order.schema';
 import { Earning, EarningSchema } from '../../schemas/earning.schema';
 import { Referral, ReferralSchema } from '../../schemas/referral.schema';
 import { Withdrawal, WithdrawalSchema } from '../../schemas/withdrawal.schema';
+import { Wallet, WalletSchema } from '../../schemas/wallet.schema';
+import { Transaction, TransactionSchema } from '../../schemas/transaction.schema';
 
 @Module({
   imports: [
@@ -18,6 +20,8 @@ import { Withdrawal, WithdrawalSchema } from '../../schemas/withdrawal.schema';
       { name: Earning.name, schema: EarningSchema },
       { name: Referral.name, schema: ReferralSchema },
       { name: Withdrawal.name, schema: WithdrawalSchema },
+      { name: Wallet.name, schema: WalletSchema },
+      { name: Transaction.name, schema: TransactionSchema },
     ]),
   ],
   controllers: [AdminController],

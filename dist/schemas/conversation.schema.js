@@ -17,6 +17,7 @@ let Conversation = class Conversation {
     lastMessage;
     isSupport;
     subject;
+    guestInfo;
     updatedAt;
 };
 exports.Conversation = Conversation;
@@ -36,6 +37,10 @@ __decorate([
     (0, mongoose_1.Prop)({ type: String }),
     __metadata("design:type", String)
 ], Conversation.prototype, "subject", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: Object }),
+    __metadata("design:type", Object)
+], Conversation.prototype, "guestInfo", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ default: Date.now }),
     __metadata("design:type", Date)

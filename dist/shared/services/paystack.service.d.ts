@@ -7,5 +7,11 @@ export declare class PaystackService {
     private get headers();
     createCustomer(email: string, firstName: string, lastName: string, phone: string): Promise<any>;
     createVirtualAccount(customerCode: string): Promise<any>;
-    verifyWebhook(signature: string, payload: any): Promise<boolean>;
+    initializeTransaction(email: string, amount: number, reference: string, callbackUrl?: string): Promise<any>;
+    verifyTransaction(reference: string): Promise<any>;
+    createTransferRecipient(name: string, accountNumber: string, bankCode: string): Promise<any>;
+    initiateTransfer(amount: number, recipientCode: string, reference: string, reason?: string): Promise<any>;
+    getBanks(): Promise<any>;
+    resolveAccountNumber(accountNumber: string, bankCode: string): Promise<any>;
+    verifySignature(signature: string, payload: any): boolean;
 }

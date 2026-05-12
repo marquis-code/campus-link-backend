@@ -17,6 +17,8 @@ const order_schema_1 = require("../../schemas/order.schema");
 const earning_schema_1 = require("../../schemas/earning.schema");
 const referral_schema_1 = require("../../schemas/referral.schema");
 const withdrawal_schema_1 = require("../../schemas/withdrawal.schema");
+const wallet_schema_1 = require("../../schemas/wallet.schema");
+const transaction_schema_1 = require("../../schemas/transaction.schema");
 let AdminModule = class AdminModule {
 };
 exports.AdminModule = AdminModule;
@@ -30,6 +32,8 @@ exports.AdminModule = AdminModule = __decorate([
                 { name: earning_schema_1.Earning.name, schema: earning_schema_1.EarningSchema },
                 { name: referral_schema_1.Referral.name, schema: referral_schema_1.ReferralSchema },
                 { name: withdrawal_schema_1.Withdrawal.name, schema: withdrawal_schema_1.WithdrawalSchema },
+                { name: wallet_schema_1.Wallet.name, schema: wallet_schema_1.WalletSchema },
+                { name: transaction_schema_1.Transaction.name, schema: transaction_schema_1.TransactionSchema },
             ]),
         ],
         controllers: [admin_controller_1.AdminController],

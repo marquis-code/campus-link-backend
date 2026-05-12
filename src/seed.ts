@@ -10,48 +10,34 @@ async function seed() {
   const CampusModel = app.get(getModelToken('Campus'));
   const CategoryModel = app.get(getModelToken('Category'));
   const UserModel = app.get(getModelToken('User'));
+  const ProductModel = app.get(getModelToken('Product'));
 
   // Seed Campuses
   const campuses = [
-    // Nigeria - South West
     { name: 'University of Lagos (UNILAG)', location: 'Lagos, Nigeria' },
     { name: 'Lagos State University (LASU)', location: 'Ojo, Lagos, Nigeria' },
     { name: 'Yaba College of Technology (YABATECH)', location: 'Yaba, Lagos, Nigeria' },
     { name: 'Obafemi Awolowo University (OAU)', location: 'Ile-Ife, Osun, Nigeria' },
     { name: 'University of Ibadan (UI)', location: 'Ibadan, Oyo, Nigeria' },
     { name: 'Federal University of Technology Akure (FUTA)', location: 'Akure, Ondo, Nigeria' },
-    
-    // Nigeria - South East
     { name: 'University of Nigeria Nsukka (UNN)', location: 'Nsukka, Enugu, Nigeria' },
     { name: 'Nnamdi Azikiwe University (UNIZIK)', location: 'Awka, Anambra, Nigeria' },
     { name: 'Federal University of Technology Owerri (FUTO)', location: 'Owerri, Imo, Nigeria' },
-    
-    // Nigeria - South South
     { name: 'University of Benin (UNIBEN)', location: 'Benin City, Edo, Nigeria' },
     { name: 'University of Port Harcourt (UNIPORT)', location: 'Port Harcourt, Rivers, Nigeria' },
     { name: 'University of Calabar (UNICAL)', location: 'Calabar, Cross River, Nigeria' },
-    
-    // Nigeria - North
     { name: 'Ahmadu Bello University (ABU)', location: 'Zaria, Kaduna, Nigeria' },
     { name: 'University of Ilorin (UNILORIN)', location: 'Ilorin, Kwara, Nigeria' },
     { name: 'Bayero University Kano (BUK)', location: 'Kano, Nigeria' },
     { name: 'University of Abuja (UNIABUJA)', location: 'Gwagwalada, Abuja, Nigeria' },
-    
-    // International - UK
     { name: 'University of Oxford', location: 'Oxford, United Kingdom' },
     { name: 'University of Cambridge', location: 'Cambridge, United Kingdom' },
     { name: 'Imperial College London', location: 'London, United Kingdom' },
-    
-    // International - US
     { name: 'Harvard University', location: 'Cambridge, MA, USA' },
     { name: 'Stanford University', location: 'Stanford, CA, USA' },
     { name: 'Massachusetts Institute of Technology (MIT)', location: 'Cambridge, MA, USA' },
-    
-    // International - Canada
     { name: 'University of Toronto', location: 'Toronto, Canada' },
     { name: 'University of British Columbia (UBC)', location: 'Vancouver, Canada' },
-    
-    // International - Others
     { name: 'University of Cape Town', location: 'Cape Town, South Africa' },
     { name: 'National University of Singapore (NUS)', location: 'Singapore' },
   ];
@@ -79,12 +65,14 @@ async function seed() {
     { name: 'Others', icon: '📦', description: 'Other products' },
   ];
 
+  const categoryMap = {};
   for (const category of categories) {
-    await CategoryModel.findOneAndUpdate(
+    const cat = await CategoryModel.findOneAndUpdate(
       { name: category.name },
       category,
-      { upsert: true },
+      { upsert: true, new: true },
     );
+    categoryMap[category.name] = cat._id;
   }
   console.log('✅ Categories seeded');
 
@@ -109,6 +97,120 @@ async function seed() {
     { upsert: true },
   );
   console.log('✅ Admin user seeded (admin@campuslink.com / admin123)');
+
+  // Seed Seller
+  const sellerPassword = await bcrypt.hash('password123', salt);
+  const seller = await UserModel.findOneAndUpdate(
+    { email: 'seller@campuslink.com' },
+    {
+      name: 'John Seller',
+      email: 'seller@campuslink.com',
+      phone: '08111111111',
+      role: 'seller',
+      campus: defaultCampus._id,
+      password: sellerPassword,
+      isActive: true,
+      isVerified: true,
+    },
+    { upsert: true, new: true },
+  );
+  console.log('✅ Seller user seeded (seller@campuslink.com / password123)');
+
+  // Seed Student
+  const studentPassword = await bcrypt.hash('password123', salt);
+  await UserModel.findOneAndUpdate(
+    { email: 'student@campuslink.com' },
+    {
+      name: 'Jane Student',
+      email: 'student@campuslink.com',
+      phone: '08222222222',
+      role: 'student',
+      campus: defaultCampus._id,
+      password: studentPassword,
+      isActive: true,
+      isVerified: true,
+    },
+    { upsert: true },
+  );
+  console.log('✅ Student user seeded (student@campuslink.com / password123)');
+
+  // Seed Products
+  const products = [
+    {
+      name: 'Gourmet Burger Combo',
+      description: 'Double beef patty with extra cheese and fries',
+      price: 4500,
+      category: categoryMap['Food'],
+      seller: seller._id,
+      campus: defaultCampus._id,
+      images: ['https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=800'],
+      stock: 50,
+      commissionPercentage: 10,
+      commissionAmount: 450,
+      status: 'active'
+    },
+    {
+      name: 'Savage Dior Perfume',
+      description: 'Long lasting fragrance for men',
+      price: 15000,
+      category: categoryMap['Perfume'],
+      seller: seller._id,
+      campus: defaultCampus._id,
+      images: ['https://images.unsplash.com/photo-1541643600914-78b084683601?w=800'],
+      stock: 20,
+      commissionPercentage: 15,
+      commissionAmount: 2250,
+      status: 'active'
+    },
+    {
+      name: 'MacBook Pro M2 Sleeve',
+      description: 'Leather sleeve for MacBook Pro 14-inch',
+      price: 8000,
+      category: categoryMap['Accessories'],
+      seller: seller._id,
+      campus: defaultCampus._id,
+      images: ['https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=800'],
+      stock: 15,
+      commissionPercentage: 12,
+      commissionAmount: 960,
+      status: 'active'
+    },
+    {
+      name: 'Wireless Noise Cancelling Headphones',
+      description: 'High fidelity audio with 40h battery life',
+      price: 25000,
+      category: categoryMap['Electronics'],
+      seller: seller._id,
+      campus: defaultCampus._id,
+      images: ['https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800'],
+      stock: 10,
+      commissionPercentage: 8,
+      commissionAmount: 2000,
+      status: 'active'
+    },
+    {
+      name: 'Organic Skincare Set',
+      description: 'Natural ingredients for glowing skin',
+      price: 12000,
+      category: categoryMap['Beauty'],
+      seller: seller._id,
+      campus: defaultCampus._id,
+      images: ['https://images.unsplash.com/photo-1556228578-0d85b1a4d571?w=800'],
+      stock: 30,
+      commissionPercentage: 20,
+      commissionAmount: 2400,
+      status: 'active'
+    }
+  ];
+
+  for (const product of products) {
+    await ProductModel.findOneAndUpdate(
+      { name: product.name },
+      product,
+      { upsert: true },
+    );
+  }
+  console.log('✅ Products seeded');
 
   await app.close();
   console.log('\n🎉 Seeding completed!');

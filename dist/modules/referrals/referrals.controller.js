@@ -21,6 +21,7 @@ const roles_guard_1 = require("../../common/guards/roles.guard");
 const roles_decorator_1 = require("../../common/decorators/roles.decorator");
 const current_user_decorator_1 = require("../../common/decorators/current-user.decorator");
 const user_schema_1 = require("../../schemas/user.schema");
+const parse_object_id_pipe_1 = require("../../common/pipes/parse-object-id.pipe");
 let ReferralsController = class ReferralsController {
     referralsService;
     constructor(referralsService) {
@@ -38,9 +39,13 @@ let ReferralsController = class ReferralsController {
     findByProduct(id) {
         return this.referralsService.findByProduct(id);
     }
+    remove(userId, id) {
+        return this.referralsService.remove(userId, id);
+    }
 };
 exports.ReferralsController = ReferralsController;
 __decorate([
+    (0, common_1.Post)(),
     (0, common_1.Post)('generate'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)(user_schema_1.UserRole.STUDENT),
@@ -51,6 +56,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], ReferralsController.prototype, "generate", null);
 __decorate([
+    (0, common_1.Get)('me'),
     (0, common_1.Get)('mine'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)(user_schema_1.UserRole.STUDENT),
@@ -69,11 +75,21 @@ __decorate([
 __decorate([
     (0, common_1.Get)('product/:id'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
-    __param(0, (0, common_1.Param)('id')),
+    __param(0, (0, common_1.Param)('id', parse_object_id_pipe_1.ParseObjectIdPipe)),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], ReferralsController.prototype, "findByProduct", null);
+__decorate([
+    (0, common_1.Delete)(':id'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(user_schema_1.UserRole.STUDENT),
+    __param(0, (0, current_user_decorator_1.CurrentUser)('_id')),
+    __param(1, (0, common_1.Param)('id', parse_object_id_pipe_1.ParseObjectIdPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", void 0)
+], ReferralsController.prototype, "remove", null);
 exports.ReferralsController = ReferralsController = __decorate([
     (0, common_1.Controller)('referrals'),
     __metadata("design:paramtypes", [referrals_service_1.ReferralsService])

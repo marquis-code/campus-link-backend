@@ -17,6 +17,13 @@ export class Conversation {
   @Prop({ type: String })
   subject?: string; // For support tickets
 
+  @Prop({ type: Object })
+  guestInfo?: {
+    name: string;
+    email: string;
+    phone: string;
+  };
+
   @Prop({ default: Date.now })
   updatedAt: Date;
 }

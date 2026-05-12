@@ -15,19 +15,23 @@ import { UserRole } from '../../schemas/user.schema';
 export class EarningsController {
   constructor(private earningsService: EarningsService) {}
 
-  // Student: get my earnings
+  // Student/Seller: get my earnings
+  @Get('me')
   @Get('mine')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.STUDENT)
+  @Roles(UserRole.STUDENT, UserRole.SELLER)
   findMine(@CurrentUser('_id') userId: string) {
     return this.earningsService.findMyEarnings(userId);
   }
 
-  // Student: get earnings summary
+  // Student/Seller: get earnings summary
   @Get('summary')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.STUDENT)
-  getSummary(@CurrentUser('_id') userId: string) {
+  @Roles(UserRole.STUDENT, UserRole.SELLER)
+  getSummary(@CurrentUser('_id') userId: string, @CurrentUser('role') role: string) {
+    if (role === UserRole.SELLER) {
+      return this.earningsService.getSellerEarningsSummary(userId);
+    }
     return this.earningsService.getEarningsSummary(userId);
   }
 

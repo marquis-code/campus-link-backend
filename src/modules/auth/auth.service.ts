@@ -9,7 +9,7 @@ import { Model } from 'mongoose';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { User, UserDocument, UserRole } from '../../schemas/user.schema';
-import { SignupDto, LoginDto, UpdateProfileDto, ChangePasswordDto } from './dto/auth.dto';
+import { SignupDto, LoginDto, UpdateProfileDto, ChangePasswordDto, ForgotPasswordDto, ResetPasswordDto } from './dto/auth.dto';
 
 import { FirebaseService } from '../firebase/firebase.service';
 import { MailService } from '../mail/mail.service';
@@ -23,7 +23,7 @@ export class AuthService {
     private mailService: MailService,
   ) {}
 
-  async firebaseLogin(idToken: string) {
+  async firebaseLogin(idToken: string, role?: string) {
     const decodedToken = await this.firebaseService.verifyIdToken(idToken);
     const { email, uid, name, picture } = decodedToken;
 
@@ -42,7 +42,7 @@ export class AuthService {
         name: name || email.split('@')[0],
         firebaseUid: uid,
         avatar: picture || '',
-        role: UserRole.STUDENT, // Default role for social signup
+        role: (role as UserRole) || UserRole.STUDENT, // Use provided role or default to STUDENT
         isActive: true,
       });
       // Fire-and-forget welcome email for social signup
@@ -168,6 +168,61 @@ export class AuthService {
 
   async validateUserById(userId: string) {
     return this.userModel.findById(userId).select('-password').lean();
+  }
+
+  async forgotPassword(dto: ForgotPasswordDto) {
+    const user = await this.userModel.findOne({ email: dto.email.toLowerCase() });
+    
+    // Always return success to prevent email enumeration
+    if (!user) {
+      return { message: 'If an account with that email exists, we sent a password reset link.' };
+    }
+
+    if (!user.password) {
+      return { message: 'This account uses Google sign-in. Please log in with Google instead.' };
+    }
+
+    // Generate a short-lived reset token (15 minutes)
+    const resetToken = this.jwtService.sign(
+      { sub: user._id, email: user.email, type: 'password_reset' },
+      { expiresIn: '15m' },
+    );
+
+    // Send reset email
+    const resetUrl = `${process.env.STUDENT_URL || 'http://localhost:3002'}/reset-password?token=${resetToken}`;
+    
+    try {
+      await this.mailService.sendPasswordResetEmail(user.email, user.name, resetUrl);
+    } catch (e) {
+      // Log but don't fail — the token is still valid
+      console.error('Failed to send reset email:', e.message);
+    }
+
+    return { message: 'If an account with that email exists, we sent a password reset link.' };
+  }
+
+  async resetPassword(dto: ResetPasswordDto) {
+    try {
+      const decoded = this.jwtService.verify(dto.token);
+      
+      if (decoded.type !== 'password_reset') {
+        throw new BadRequestException('Invalid reset token.');
+      }
+
+      const user = await this.userModel.findById(decoded.sub);
+      if (!user) {
+        throw new BadRequestException('User not found.');
+      }
+
+      const salt = await bcrypt.genSalt(10);
+      user.password = await bcrypt.hash(dto.newPassword, salt);
+      await user.save();
+
+      return { message: 'Password has been reset successfully. You can now sign in.' };
+    } catch (e) {
+      if (e instanceof BadRequestException) throw e;
+      throw new BadRequestException('Reset link has expired or is invalid. Please request a new one.');
+    }
   }
 
   private generateToken(user: any): string {
