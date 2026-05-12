@@ -44,6 +44,25 @@ export declare class ChatService {
     } & {
         id: string;
     })[]>;
+    debugMessages(conversationId: string): Promise<{
+        conversationId: string;
+        stringQueryCount: number;
+        objectIdQueryCount: number;
+        stringQuerySample: (import("mongoose").Document<unknown, {}, MessageDocument, {}, import("mongoose").DefaultSchemaOptions> & Message & import("mongoose").Document<Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
+            _id: Types.ObjectId;
+        }> & {
+            __v: number;
+        } & {
+            id: string;
+        })[];
+        objectIdQuerySample: (import("mongoose").Document<unknown, {}, MessageDocument, {}, import("mongoose").DefaultSchemaOptions> & Message & import("mongoose").Document<Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
+            _id: Types.ObjectId;
+        }> & {
+            __v: number;
+        } & {
+            id: string;
+        })[];
+    }>;
     sendMessage(userId: string, dto: SendMessageDto): Promise<import("mongoose").PopulateDocumentResult<import("mongoose").Document<unknown, {}, MessageDocument, {}, import("mongoose").DefaultSchemaOptions> & Message & import("mongoose").Document<Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
         _id: Types.ObjectId;
     }> & {

@@ -49,6 +49,9 @@ let ChatController = class ChatController {
     async getMessages(conversationId, req, page, limit) {
         return this.chatService.getMessages(conversationId, req.user._id, page || 1, limit || 50);
     }
+    async debugMessages(conversationId) {
+        return this.chatService.debugMessages(conversationId);
+    }
     async getSupportConversations() {
         return this.chatService.getSupportConversations();
     }
@@ -98,6 +101,13 @@ __decorate([
     __metadata("design:paramtypes", [String, Object, Number, Number]),
     __metadata("design:returntype", Promise)
 ], ChatController.prototype, "getMessages", null);
+__decorate([
+    (0, common_1.Get)('conversations/:id/debug-messages'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], ChatController.prototype, "debugMessages", null);
 __decorate([
     (0, common_1.Get)('support/conversations'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),

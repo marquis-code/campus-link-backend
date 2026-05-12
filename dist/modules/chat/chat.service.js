@@ -91,7 +91,7 @@ let ChatService = class ChatService {
     }
     async getConversations(userId) {
         return this.conversationModel
-            .find({ participants: userId })
+            .find({ participants: new mongoose_2.Types.ObjectId(userId) })
             .populate('participants', 'name email avatar role')
             .populate('lastMessage')
             .sort('-updatedAt')
@@ -100,12 +100,23 @@ let ChatService = class ChatService {
     async getMessages(conversationId, userId, page = 1, limit = 50) {
         const skip = (page - 1) * limit;
         return this.messageModel
-            .find({ conversation: conversationId })
+            .find({ conversation: new mongoose_2.Types.ObjectId(conversationId) })
             .sort('-createdAt')
             .skip(skip)
             .limit(limit)
             .populate('sender', 'name avatar')
             .exec();
+    }
+    async debugMessages(conversationId) {
+        const stringQuery = await this.messageModel.find({ conversation: conversationId }).exec();
+        const objectIdQuery = await this.messageModel.find({ conversation: new mongoose_2.Types.ObjectId(conversationId) }).exec();
+        return {
+            conversationId,
+            stringQueryCount: stringQuery.length,
+            objectIdQueryCount: objectIdQuery.length,
+            stringQuerySample: stringQuery.slice(0, 2),
+            objectIdQuerySample: objectIdQuery.slice(0, 2)
+        };
     }
     async sendMessage(userId, dto) {
         const isGuest = userId.startsWith('guest_');

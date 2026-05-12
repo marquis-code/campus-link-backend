@@ -9,9 +9,15 @@ async function bootstrap() {
     const seedService = app.get(seed_service_1.SeedService);
     await seedService.seed();
     app.enableCors({
-        origin: true,
-        methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+        origin: (origin, callback) => {
+            callback(null, true);
+        },
         credentials: true,
+        methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+        allowedHeaders: 'Origin, X-Requested-With, Content-Type, Accept, Authorization, x-xsrf-token',
+        exposedHeaders: 'Content-Range,X-Content-Range',
+        preflightContinue: false,
+        optionsSuccessStatus: 204,
     });
     app.useGlobalPipes(new common_1.ValidationPipe({
         whitelist: true,

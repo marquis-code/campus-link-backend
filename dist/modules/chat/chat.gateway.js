@@ -93,32 +93,39 @@ let ChatGateway = ChatGateway_1 = class ChatGateway {
         return { event: 'left', room: data.conversationId };
     }
     async handleMessage(client, dto) {
-        const userId = client.userId;
-        if (!userId)
-            return;
-        const message = await this.chatService.sendMessage(userId, dto);
-        this.server.to(`conv_${dto.conversationId}`).emit('new_message', message);
-        const conversation = await this.chatService.getConversationById(dto.conversationId);
-        if (conversation) {
-            if (conversation.isSupport) {
-                this.server.to('admins').emit('message_notification', {
-                    conversationId: dto.conversationId,
-                    message,
-                    senderName: message.sender?.name || message.guestSender?.name || 'Guest',
-                });
-            }
-            for (const participant of conversation.participants) {
-                const pId = participant.toString();
-                if (pId !== userId) {
-                    this.server.to(`user_${pId}`).emit('message_notification', {
+        try {
+            const userId = client.userId;
+            if (!userId)
+                return;
+            const message = await this.chatService.sendMessage(userId, dto);
+            this.server.to(`conv_${dto.conversationId}`).emit('new_message', message);
+            const conversation = await this.chatService.getConversationById(dto.conversationId);
+            if (conversation) {
+                if (conversation.isSupport) {
+                    this.server.to('admins').emit('message_notification', {
                         conversationId: dto.conversationId,
                         message,
-                        senderName: message.sender?.name || message.guestSender?.name || 'Someone',
+                        senderName: message.sender?.name || message.guestSender?.name || 'Guest',
                     });
                 }
+                for (const participant of conversation.participants) {
+                    const pId = participant.toString();
+                    if (pId !== userId) {
+                        this.server.to(`user_${pId}`).emit('message_notification', {
+                            conversationId: dto.conversationId,
+                            message,
+                            senderName: message.sender?.name || message.guestSender?.name || 'Someone',
+                        });
+                    }
+                }
             }
+            return message;
         }
-        return message;
+        catch (error) {
+            this.logger.error(`Failed to handle send_message: ${error.message}`, error.stack);
+            client.emit('error', { message: 'Failed to send message', error: error.message });
+            throw error;
+        }
     }
     handleTyping(client, data) {
         const userId = client.userId;
