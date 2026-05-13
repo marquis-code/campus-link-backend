@@ -86,5 +86,4 @@ exports.Transaction = Transaction = __decorate([
 ], Transaction);
 exports.TransactionSchema = mongoose_1.SchemaFactory.createForClass(Transaction);
 exports.TransactionSchema.index({ user: 1, createdAt: -1 });
-exports.TransactionSchema.index({ reference: 1 });
 //# sourceMappingURL=transaction.schema.js.map

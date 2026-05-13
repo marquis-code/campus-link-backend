@@ -57,4 +57,3 @@ export class Transaction {
 export const TransactionSchema = SchemaFactory.createForClass(Transaction);
 
 TransactionSchema.index({ user: 1, createdAt: -1 });
-TransactionSchema.index({ reference: 1 });
