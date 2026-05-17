@@ -110,14 +110,39 @@ let EarningsService = class EarningsService {
         const [confirmedResult, pendingResult, paidResult] = await Promise.all([
             this.orderModel.aggregate([
                 { $match: { seller: sellerObjId, status: 'confirmed' } },
-                { $group: { _id: null, total: { $sum: { $subtract: ['$totalAmount', '$commissionAmount'] } }, count: { $sum: 1 } } },
+                {
+                    $group: {
+                        _id: null,
+                        total: {
+                            $sum: { $subtract: ['$totalAmount', '$commissionAmount'] },
+                        },
+                        count: { $sum: 1 },
+                    },
+                },
             ]),
             this.orderModel.aggregate([
-                { $match: { seller: sellerObjId, status: { $in: ['pending', 'processing'] } } },
-                { $group: { _id: null, total: { $sum: { $subtract: ['$totalAmount', '$commissionAmount'] } } } },
+                {
+                    $match: {
+                        seller: sellerObjId,
+                        status: { $in: ['pending', 'processing'] },
+                    },
+                },
+                {
+                    $group: {
+                        _id: null,
+                        total: {
+                            $sum: { $subtract: ['$totalAmount', '$commissionAmount'] },
+                        },
+                    },
+                },
             ]),
             this.withdrawalModel.aggregate([
-                { $match: { user: sellerObjId, status: { $in: ['approved', 'completed'] } } },
+                {
+                    $match: {
+                        user: sellerObjId,
+                        status: { $in: ['approved', 'completed'] },
+                    },
+                },
                 { $group: { _id: null, total: { $sum: '$amount' } } },
             ]),
         ]);

@@ -11,7 +11,11 @@ import { Product, ProductDocument } from '../../schemas/product.schema';
 import { Referral, ReferralDocument } from '../../schemas/referral.schema';
 import { Earning, EarningDocument } from '../../schemas/earning.schema';
 import { TransactionPurpose } from '../../schemas/transaction.schema';
-import { CreateOrderDto, UpdateOrderStatusDto, OrderQueryDto } from './dto/order.dto';
+import {
+  CreateOrderDto,
+  UpdateOrderStatusDto,
+  OrderQueryDto,
+} from './dto/order.dto';
 import { NotificationsService } from '../notifications/notifications.service';
 import { MailService } from '../mail/mail.service';
 import { PaystackService } from '../../shared/services/paystack.service';
@@ -46,7 +50,7 @@ export class OrdersService {
     // P = (M + 100) / 0.985
     let fee = 0;
     let totalPayable = totalAmount;
-    
+
     if (totalAmount > 0) {
       const isAboveThreshold = totalAmount > 2500;
       const flatFee = isAboveThreshold ? 100 : 0;
@@ -63,8 +67,8 @@ export class OrdersService {
         referralCode: dto.referralCode,
       });
       if (referral) {
-        promoterId = referral.promoter as Types.ObjectId;
-        referralId = referral._id as Types.ObjectId;
+        promoterId = referral.promoter;
+        referralId = referral._id;
       }
     }
 
@@ -100,9 +104,11 @@ export class OrdersService {
             dto.buyerEmail,
             totalPayable,
             `order_${order._id}`,
-            process.env.STUDENT_URL ? `${process.env.STUDENT_URL}/orders/success` : undefined
+            process.env.STUDENT_URL
+              ? `${process.env.STUDENT_URL}/orders/success`
+              : undefined,
           );
-          
+
           await this.orderModel.findByIdAndUpdate(order._id, {
             paymentReference: payment.reference,
           });
@@ -114,8 +120,10 @@ export class OrdersService {
         }
 
         // Default: Create DVA for Bank Transfer
-        const dva = await this.paystackService.createVirtualAccount(customer.customer_code);
-        
+        const dva = await this.paystackService.createVirtualAccount(
+          customer.customer_code,
+        );
+
         await this.orderModel.findByIdAndUpdate(order._id, {
           bankName: dva.bank.name,
           accountNumber: dva.account_number,
@@ -142,7 +150,7 @@ export class OrdersService {
              <li>Transfer Charge: ₦${fee.toLocaleString()}</li>
              <li><b>Total Payable: ₦${totalPayable.toLocaleString()}</b></li>
            </ul>
-           <p>Your order will be processed as soon as payment is confirmed.</p>`
+           <p>Your order will be processed as soon as payment is confirmed.</p>`,
         );
       } catch (err) {
         console.error('Paystack integration failed', err);
@@ -158,7 +166,7 @@ export class OrdersService {
       seller._id.toString(),
       seller.email,
       order._id.toString(),
-      totalAmount
+      totalAmount,
     );
 
     return this.orderModel
@@ -178,7 +186,9 @@ export class OrdersService {
     const isSeller = order.seller.toString() === user._id.toString();
 
     if (!isAdmin && !isSeller) {
-      throw new ForbiddenException('You do not have permission to update this order');
+      throw new ForbiddenException(
+        'You do not have permission to update this order',
+      );
     }
 
     const previousStatus = order.status;
@@ -198,7 +208,7 @@ export class OrdersService {
         amountToCredit,
         TransactionPurpose.ORDER_SETTLEMENT,
         `settle_${order._id}`,
-        `Settlement for order #${order._id.toString().slice(-8)}`
+        `Settlement for order #${order._id.toString().slice(-8)}`,
       );
 
       // Create earnings for promoter if applicable
@@ -255,7 +265,7 @@ export class OrdersService {
     // Notify promoter about earning
     const populatedEarning = await earning.populate('promoter', 'name email');
     const promoter = populatedEarning.promoter as any;
-    
+
     // Credit promoter's wallet
     await this.walletsService.creditWallet(
       order.promoter.toString(),
@@ -263,14 +273,14 @@ export class OrdersService {
       TransactionPurpose.EARNING,
       `order_a_${order._id}`,
       `Commission for Order #${order._id.toString().slice(-6).toUpperCase()}`,
-      { orderId: order._id }
+      { orderId: order._id },
     );
 
     await this.notificationsService.notifyEarning(
       promoter._id.toString(),
       promoter.email,
       order.commissionAmount,
-      (order.product as any).name || 'a product'
+      (order.product as any).name || 'a product',
     );
   }
 

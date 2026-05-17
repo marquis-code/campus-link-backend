@@ -5,7 +5,10 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { Cache } from 'cache-manager';
 import { Earning, EarningDocument } from '../../schemas/earning.schema';
 import { Order, OrderDocument } from '../../schemas/order.schema';
-import { Withdrawal, WithdrawalDocument } from '../../schemas/withdrawal.schema';
+import {
+  Withdrawal,
+  WithdrawalDocument,
+} from '../../schemas/withdrawal.schema';
 
 import { WalletsService } from '../wallets/wallets.service';
 
@@ -14,7 +17,8 @@ export class EarningsService {
   constructor(
     @InjectModel(Earning.name) private earningModel: Model<EarningDocument>,
     @InjectModel(Order.name) private orderModel: Model<OrderDocument>,
-    @InjectModel(Withdrawal.name) private withdrawalModel: Model<WithdrawalDocument>,
+    @InjectModel(Withdrawal.name)
+    private withdrawalModel: Model<WithdrawalDocument>,
     private walletsService: WalletsService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
@@ -62,7 +66,7 @@ export class EarningsService {
 
     const totalSales = await this.earningModel.countDocuments({
       promoter: promoterObjId,
-    } as any);
+    });
 
     const wallet = await this.walletsService.getOrCreateWallet(promoterId);
 
@@ -108,14 +112,39 @@ export class EarningsService {
     const [confirmedResult, pendingResult, paidResult] = await Promise.all([
       this.orderModel.aggregate([
         { $match: { seller: sellerObjId, status: 'confirmed' } },
-        { $group: { _id: null, total: { $sum: { $subtract: ['$totalAmount', '$commissionAmount'] } }, count: { $sum: 1 } } },
+        {
+          $group: {
+            _id: null,
+            total: {
+              $sum: { $subtract: ['$totalAmount', '$commissionAmount'] },
+            },
+            count: { $sum: 1 },
+          },
+        },
       ]),
       this.orderModel.aggregate([
-        { $match: { seller: sellerObjId, status: { $in: ['pending', 'processing'] } } },
-        { $group: { _id: null, total: { $sum: { $subtract: ['$totalAmount', '$commissionAmount'] } } } },
+        {
+          $match: {
+            seller: sellerObjId,
+            status: { $in: ['pending', 'processing'] },
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            total: {
+              $sum: { $subtract: ['$totalAmount', '$commissionAmount'] },
+            },
+          },
+        },
       ]),
       this.withdrawalModel.aggregate([
-        { $match: { user: sellerObjId, status: { $in: ['approved', 'completed'] } } },
+        {
+          $match: {
+            user: sellerObjId,
+            status: { $in: ['approved', 'completed'] },
+          },
+        },
         { $group: { _id: null, total: { $sum: '$amount' } } },
       ]),
     ]);

@@ -30,7 +30,9 @@ let ChatService = class ChatService {
             throw new common_1.BadRequestException('Invalid user ID');
         }
         const participants = [new mongoose_2.Types.ObjectId(userId)];
-        if (dto.participantId && mongoose_2.Types.ObjectId.isValid(dto.participantId) && dto.participantId !== userId) {
+        if (dto.participantId &&
+            mongoose_2.Types.ObjectId.isValid(dto.participantId) &&
+            dto.participantId !== userId) {
             participants.push(new mongoose_2.Types.ObjectId(dto.participantId));
         }
         if (dto.isSupport) {
@@ -69,14 +71,14 @@ let ChatService = class ChatService {
             const greetings = [
                 `Hey ${firstName}! 👋 Welcome to CampusLink. We're super excited to have you here! How can we help you today? ✨`,
                 `Hello ${firstName}, welcome to the community! 🎓 Our team is here to assist you with anything you need. What's on your mind?`,
-                `Hi ${firstName}! ✨ Thanks for reaching out to CampusLink. One of our student ambassadors will be with you shortly. In the meantime, feel free to ask your question! 🚀`
+                `Hi ${firstName}! ✨ Thanks for reaching out to CampusLink. One of our student ambassadors will be with you shortly. In the meantime, feel free to ask your question! 🚀`,
             ];
             const randomGreeting = greetings[Math.floor(Math.random() * greetings.length)];
             systemMessage = await this.messageModel.create({
                 conversation: conversation._id,
                 type: message_schema_1.MessageType.TEXT,
                 content: randomGreeting,
-                isSystem: true
+                isSystem: true,
             });
             if (systemMessage) {
                 await this.conversationModel.findByIdAndUpdate(conversation._id, {
@@ -108,14 +110,18 @@ let ChatService = class ChatService {
             .exec();
     }
     async debugMessages(conversationId) {
-        const stringQuery = await this.messageModel.find({ conversation: conversationId }).exec();
-        const objectIdQuery = await this.messageModel.find({ conversation: new mongoose_2.Types.ObjectId(conversationId) }).exec();
+        const stringQuery = await this.messageModel
+            .find({ conversation: conversationId })
+            .exec();
+        const objectIdQuery = await this.messageModel
+            .find({ conversation: new mongoose_2.Types.ObjectId(conversationId) })
+            .exec();
         return {
             conversationId,
             stringQueryCount: stringQuery.length,
             objectIdQueryCount: objectIdQuery.length,
             stringQuerySample: stringQuery.slice(0, 2),
-            objectIdQuerySample: objectIdQuery.slice(0, 2)
+            objectIdQuerySample: objectIdQuery.slice(0, 2),
         };
     }
     async sendMessage(userId, dto) {
@@ -150,7 +156,9 @@ let ChatService = class ChatService {
         if (!isGuest) {
             update.$addToSet = { readBy: new mongoose_2.Types.ObjectId(userId) };
         }
-        return this.messageModel.findByIdAndUpdate(messageId, update, { new: true });
+        return this.messageModel.findByIdAndUpdate(messageId, update, {
+            new: true,
+        });
     }
     async getSupportConversations() {
         return this.conversationModel

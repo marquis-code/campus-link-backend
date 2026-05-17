@@ -53,7 +53,9 @@ let FirebaseService = class FirebaseService {
     }
     onModuleInit() {
         const projectId = this.configService.get('FIREBASE_PROJECT_ID');
-        const privateKey = this.configService.get('FIREBASE_PRIVATE_KEY')?.replace(/\\n/g, '\n');
+        const privateKey = this.configService
+            .get('FIREBASE_PRIVATE_KEY')
+            ?.replace(/\\n/g, '\n');
         const clientEmail = this.configService.get('FIREBASE_CLIENT_EMAIL');
         if (projectId && privateKey && clientEmail) {
             if (!admin.apps.length) {

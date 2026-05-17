@@ -36,7 +36,10 @@ let CampusesService = class CampusesService {
         const cached = await this.cacheManager.get(this.CACHE_KEY);
         if (cached)
             return cached;
-        const campuses = await this.campusModel.find({ isActive: true }).sort({ name: 1 }).lean();
+        const campuses = await this.campusModel
+            .find({ isActive: true })
+            .sort({ name: 1 })
+            .lean();
         await this.cacheManager.set(this.CACHE_KEY, campuses, this.CACHE_TTL);
         return campuses;
     }

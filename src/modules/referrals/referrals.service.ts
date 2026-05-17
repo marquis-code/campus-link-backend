@@ -40,7 +40,10 @@ export class ReferralsService {
     if (existing) {
       return this.referralModel
         .findById(existing._id)
-        .populate('product', 'name price commissionAmount images description category')
+        .populate(
+          'product',
+          'name price commissionAmount images description category',
+        )
         .populate('promoter', 'name email')
         .lean();
     }
@@ -59,7 +62,10 @@ export class ReferralsService {
 
     return this.referralModel
       .findById(referral._id)
-      .populate('product', 'name price commissionAmount images description category')
+      .populate(
+        'product',
+        'name price commissionAmount images description category',
+      )
       .populate('promoter', 'name email')
       .lean();
   }

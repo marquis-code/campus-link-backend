@@ -8,7 +8,11 @@ import { Model, Types } from 'mongoose';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { Cache } from 'cache-manager';
 import { Inject } from '@nestjs/common';
-import { Product, ProductDocument, ProductStatus } from '../../schemas/product.schema';
+import {
+  Product,
+  ProductDocument,
+  ProductStatus,
+} from '../../schemas/product.schema';
 import {
   CreateProductDto,
   UpdateProductDto,

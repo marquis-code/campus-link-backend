@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Body, UseGuards, Req, Query, Param } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  UseGuards,
+  Req,
+  Query,
+  Param,
+} from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ChatService } from './chat.service';
 import { ChatGateway } from './chat.gateway';
@@ -13,8 +22,14 @@ export class ChatController {
 
   @Post('conversations')
   @UseGuards(JwtAuthGuard)
-  async createConversation(@Req() req: any, @Body() dto: CreateConversationDto) {
-    const conversation = await this.chatService.createConversation(req.user._id, dto);
+  async createConversation(
+    @Req() req: any,
+    @Body() dto: CreateConversationDto,
+  ) {
+    const conversation = await this.chatService.createConversation(
+      req.user._id,
+      dto,
+    );
     // If it's a support chat, notify admins
     if (dto.isSupport) {
       this.chatGateway.notifyNewConversation(conversation);
@@ -24,16 +39,17 @@ export class ChatController {
 
   @Post('support/guest')
   async guestSupport(@Body() dto: CreateConversationDto) {
-    const { conversation, message } = await this.chatService.createGuestConversation(dto);
-    
+    const { conversation, message } =
+      await this.chatService.createGuestConversation(dto);
+
     // Notify admins of new conversation
     this.chatGateway.notifyNewConversation(conversation);
-    
+
     // Broadcast the automated message if it exists
     if (message) {
       this.chatGateway.broadcastMessage(conversation._id.toString(), message);
     }
-    
+
     return conversation;
   }
 
@@ -49,7 +65,12 @@ export class ChatController {
     @Query('page') page?: number,
     @Query('limit') limit?: number,
   ) {
-    return this.chatService.getMessages(conversationId, null, page || 1, limit || 50);
+    return this.chatService.getMessages(
+      conversationId,
+      null,
+      page || 1,
+      limit || 50,
+    );
   }
 
   @Get('conversations/:id/messages')
@@ -60,7 +81,12 @@ export class ChatController {
     @Query('page') page?: number,
     @Query('limit') limit?: number,
   ) {
-    return this.chatService.getMessages(conversationId, req.user._id, page || 1, limit || 50);
+    return this.chatService.getMessages(
+      conversationId,
+      req.user._id,
+      page || 1,
+      limit || 50,
+    );
   }
 
   @Get('conversations/:id/debug-messages')

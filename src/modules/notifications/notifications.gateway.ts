@@ -15,7 +15,9 @@ import { JwtService } from '@nestjs/jwt';
   cors: { origin: '*' },
   namespace: '/notifications',
 })
-export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class NotificationsGateway
+  implements OnGatewayConnection, OnGatewayDisconnect
+{
   @WebSocketServer()
   server: Server;
 
@@ -26,7 +28,8 @@ export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisco
 
   async handleConnection(client: Socket) {
     try {
-      const token = client.handshake.auth?.token || client.handshake.query?.token;
+      const token =
+        client.handshake.auth?.token || client.handshake.query?.token;
       if (!token) {
         client.disconnect();
         return;
@@ -47,7 +50,9 @@ export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisco
 
       // Broadcast online status
       this.server.emit('user_online', { userId, online: true });
-      this.logger.log(`User ${userId} connected (${this.onlineUsers.get(userId)!.size} sessions)`);
+      this.logger.log(
+        `User ${userId} connected (${this.onlineUsers.get(userId)!.size} sessions)`,
+      );
     } catch (e) {
       client.disconnect();
     }
@@ -94,7 +99,10 @@ export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisco
    * Check if a user is currently online.
    */
   isUserOnline(userId: string): boolean {
-    return this.onlineUsers.has(userId) && (this.onlineUsers.get(userId)?.size || 0) > 0;
+    return (
+      this.onlineUsers.has(userId) &&
+      (this.onlineUsers.get(userId)?.size || 0) > 0
+    );
   }
 
   /**
@@ -105,7 +113,10 @@ export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisco
   }
 
   @SubscribeMessage('mark_read')
-  handleMarkRead(@ConnectedSocket() client: Socket, @MessageBody() data: { notificationId: string }) {
+  handleMarkRead(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { notificationId: string },
+  ) {
     // Client acknowledges a notification was read — handled by the REST API
     return { event: 'marked', id: data.notificationId };
   }

@@ -24,7 +24,8 @@ let WsJwtAuthGuard = class WsJwtAuthGuard {
     async canActivate(context) {
         try {
             const client = context.switchToWs().getClient();
-            const authToken = client.handshake.auth?.token || client.handshake.headers?.authorization?.split(' ')[1];
+            const authToken = client.handshake.auth?.token ||
+                client.handshake.headers?.authorization?.split(' ')[1];
             if (!authToken) {
                 throw new websockets_1.WsException('Unauthorized');
             }

@@ -5,7 +5,7 @@ import { SeedService } from './common/services/seed.service';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  
+
   // Seeding
   const seedService = app.get(SeedService);
   await seedService.seed();
@@ -18,7 +18,8 @@ async function bootstrap() {
     },
     credentials: true,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-    allowedHeaders: 'Origin, X-Requested-With, Content-Type, Accept, Authorization, x-xsrf-token',
+    allowedHeaders:
+      'Origin, X-Requested-With, Content-Type, Accept, Authorization, x-xsrf-token',
     exposedHeaders: 'Content-Range,X-Content-Range',
     preflightContinue: false,
     optionsSuccessStatus: 204,

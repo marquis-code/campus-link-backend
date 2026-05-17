@@ -1,9 +1,4 @@
-import {
-  Controller,
-  Get,
-  Query,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { EarningsService } from './earnings.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -28,7 +23,10 @@ export class EarningsController {
   @Get('summary')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.STUDENT, UserRole.SELLER)
-  getSummary(@CurrentUser('_id') userId: string, @CurrentUser('role') role: string) {
+  getSummary(
+    @CurrentUser('_id') userId: string,
+    @CurrentUser('role') role: string,
+  ) {
     if (role === UserRole.SELLER) {
       return this.earningsService.getSellerEarningsSummary(userId);
     }

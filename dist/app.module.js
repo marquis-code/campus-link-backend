@@ -59,6 +59,7 @@ const chat_module_1 = require("./modules/chat/chat.module");
 const mail_module_1 = require("./modules/mail/mail.module");
 const firebase_module_1 = require("./modules/firebase/firebase.module");
 const seed_module_1 = require("./common/services/seed.module");
+const health_module_1 = require("./modules/health/health.module");
 const cache_manager_1 = require("@nestjs/cache-manager");
 const redisStore = __importStar(require("cache-manager-redis-yet"));
 const shared_module_1 = require("./shared/services/shared.module");
@@ -98,8 +99,8 @@ exports.AppModule = AppModule = __decorate([
                                         return false;
                                     }
                                     return Math.min(retries * 100, 3000);
-                                }
-                            }
+                                },
+                            },
                         });
                         if (store.client) {
                             store.client.on('error', (err) => {
@@ -134,6 +135,7 @@ exports.AppModule = AppModule = __decorate([
             seed_module_1.SeedModule,
             payments_module_1.PaymentsModule,
             wallets_module_1.WalletsModule,
+            health_module_1.HealthModule,
         ],
     })
 ], AppModule);

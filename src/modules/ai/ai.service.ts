@@ -49,15 +49,15 @@ export class AiService {
         hooks: [
           '🔥 You need to see this!',
           '💯 Check this out fam!',
-          '⚡ Don\'t sleep on this!',
-          '🙌 This is what you\'ve been waiting for!',
+          "⚡ Don't sleep on this!",
+          "🙌 This is what you've been waiting for!",
           '👀 Look what I found!',
         ],
         ctas: [
           'Order now before it runs out! 👇',
           'DM to order now! 🛒',
           'Grab yours today! 💨',
-          'Don\'t miss out, order now! 🔥',
+          "Don't miss out, order now! 🔥",
           'Tap the link to order! 👇',
         ],
         urgency: [
@@ -65,7 +65,7 @@ export class AiService {
           'Going fast! ⏰',
           'Few pieces left!',
           'Selling out quick!',
-          'Don\'t wait too long!',
+          "Don't wait too long!",
         ],
       },
       professional: {
@@ -101,16 +101,16 @@ export class AiService {
         ],
         ctas: [
           'ORDER RIGHT NOW! 🏃‍♂️',
-          'BUY BEFORE IT\'S GONE!!! 😱',
+          "BUY BEFORE IT'S GONE!!! 😱",
           'GRAB IT NOW! ⚡',
-          'DON\'T WAIT — ORDER NOW!',
+          "DON'T WAIT — ORDER NOW!",
           'CLICK TO BUY ASAP! 👇',
         ],
         urgency: [
           'ONLY A FEW LEFT!!!',
           'SELLING OUT IN HOURS!',
           'ALMOST GONE!',
-          'THIS WON\'T LAST!',
+          "THIS WON'T LAST!",
           'FINAL PIECES!',
         ],
       },

@@ -28,7 +28,9 @@ let MailService = MailService_1 = class MailService {
         else {
             this.logger.warn('RESEND_API_KEY not found. Emails will not be sent.');
         }
-        this.fromAddress = this.configService.get('MAIL_FROM') || 'CampusLink <onboarding@resend.dev>';
+        this.fromAddress =
+            this.configService.get('MAIL_FROM') ||
+                'CampusLink <onboarding@resend.dev>';
     }
     async sendMail(to, subject, html) {
         if (!this.resend)

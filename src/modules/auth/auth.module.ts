@@ -18,7 +18,9 @@ import { FirebaseModule } from '../firebase/firebase.module';
       imports: [ConfigModule],
       useFactory: (configService: ConfigService): any => ({
         secret: configService.get<string>('JWT_SECRET') || 'fallback-secret',
-        signOptions: { expiresIn: configService.get<string>('JWT_EXPIRATION') || '7d' },
+        signOptions: {
+          expiresIn: configService.get<string>('JWT_EXPIRATION') || '7d',
+        },
       }),
       inject: [ConfigService],
     }),

@@ -32,8 +32,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   async handleConnection(client: Socket) {
     try {
-      const token = client.handshake.auth?.token || client.handshake.query?.token;
-      const guestId = client.handshake.auth?.guestId || client.handshake.query?.guestId;
+      const token =
+        client.handshake.auth?.token || client.handshake.query?.token;
+      const guestId =
+        client.handshake.auth?.guestId || client.handshake.query?.guestId;
 
       let userId: string;
       let role: string | undefined = undefined;
@@ -126,14 +128,19 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.server.to(`conv_${dto.conversationId}`).emit('new_message', message);
 
       // Notify participants not in the room
-      const conversation = await this.chatService.getConversationById(dto.conversationId);
+      const conversation = await this.chatService.getConversationById(
+        dto.conversationId,
+      );
       if (conversation) {
         // If it's a support conversation, also notify all online admins
         if (conversation.isSupport) {
           this.server.to('admins').emit('message_notification', {
             conversationId: dto.conversationId,
             message,
-            senderName: (message as any).sender?.name || (message as any).guestSender?.name || 'Guest',
+            senderName:
+              (message as any).sender?.name ||
+              (message as any).guestSender?.name ||
+              'Guest',
           });
         }
 
@@ -144,7 +151,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
             this.server.to(`user_${pId}`).emit('message_notification', {
               conversationId: dto.conversationId,
               message,
-              senderName: (message as any).sender?.name || (message as any).guestSender?.name || 'Someone',
+              senderName:
+                (message as any).sender?.name ||
+                (message as any).guestSender?.name ||
+                'Someone',
             });
           }
         }
@@ -152,8 +162,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       return message;
     } catch (error) {
-      this.logger.error(`Failed to handle send_message: ${error.message}`, error.stack);
-      client.emit('error', { message: 'Failed to send message', error: error.message });
+      this.logger.error(
+        `Failed to handle send_message: ${error.message}`,
+        error.stack,
+      );
+      client.emit('error', {
+        message: 'Failed to send message',
+        error: error.message,
+      });
       throw error;
     }
   }
@@ -209,6 +225,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
    * Check if user is online in chat namespace.
    */
   isUserOnline(userId: string): boolean {
-    return this.userSockets.has(userId) && (this.userSockets.get(userId)?.size || 0) > 0;
+    return (
+      this.userSockets.has(userId) &&
+      (this.userSockets.get(userId)?.size || 0) > 0
+    );
   }
 }

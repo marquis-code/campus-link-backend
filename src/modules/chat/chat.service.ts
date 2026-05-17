@@ -1,14 +1,26 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { Conversation, ConversationDocument } from '../../schemas/conversation.schema';
-import { Message, MessageDocument, MessageType } from '../../schemas/message.schema';
+import {
+  Conversation,
+  ConversationDocument,
+} from '../../schemas/conversation.schema';
+import {
+  Message,
+  MessageDocument,
+  MessageType,
+} from '../../schemas/message.schema';
 import { SendMessageDto, CreateConversationDto } from './dto/chat.dto';
 
 @Injectable()
 export class ChatService {
   constructor(
-    @InjectModel(Conversation.name) private conversationModel: Model<ConversationDocument>,
+    @InjectModel(Conversation.name)
+    private conversationModel: Model<ConversationDocument>,
     @InjectModel(Message.name) private messageModel: Model<MessageDocument>,
   ) {}
 
@@ -18,10 +30,14 @@ export class ChatService {
     }
 
     const participants = [new Types.ObjectId(userId)];
-    if (dto.participantId && Types.ObjectId.isValid(dto.participantId) && dto.participantId !== userId) {
+    if (
+      dto.participantId &&
+      Types.ObjectId.isValid(dto.participantId) &&
+      dto.participantId !== userId
+    ) {
       participants.push(new Types.ObjectId(dto.participantId));
     }
-    
+
     // Check for existing support conversation for this user
     if (dto.isSupport) {
       const existingSupport = await this.conversationModel.findOne({
@@ -63,15 +79,16 @@ export class ChatService {
       const greetings = [
         `Hey ${firstName}! 👋 Welcome to CampusLink. We're super excited to have you here! How can we help you today? ✨`,
         `Hello ${firstName}, welcome to the community! 🎓 Our team is here to assist you with anything you need. What's on your mind?`,
-        `Hi ${firstName}! ✨ Thanks for reaching out to CampusLink. One of our student ambassadors will be with you shortly. In the meantime, feel free to ask your question! 🚀`
+        `Hi ${firstName}! ✨ Thanks for reaching out to CampusLink. One of our student ambassadors will be with you shortly. In the meantime, feel free to ask your question! 🚀`,
       ];
-      const randomGreeting = greetings[Math.floor(Math.random() * greetings.length)];
+      const randomGreeting =
+        greetings[Math.floor(Math.random() * greetings.length)];
 
       systemMessage = await this.messageModel.create({
         conversation: conversation._id,
         type: MessageType.TEXT,
         content: randomGreeting,
-        isSystem: true
+        isSystem: true,
       });
 
       if (systemMessage) {
@@ -97,7 +114,12 @@ export class ChatService {
       .exec();
   }
 
-  async getMessages(conversationId: string, userId: string | null, page = 1, limit = 50) {
+  async getMessages(
+    conversationId: string,
+    userId: string | null,
+    page = 1,
+    limit = 50,
+  ) {
     const skip = (page - 1) * limit;
     return this.messageModel
       .find({ conversation: new Types.ObjectId(conversationId) })
@@ -109,14 +131,18 @@ export class ChatService {
   }
 
   async debugMessages(conversationId: string) {
-    const stringQuery = await this.messageModel.find({ conversation: conversationId }).exec();
-    const objectIdQuery = await this.messageModel.find({ conversation: new Types.ObjectId(conversationId) }).exec();
+    const stringQuery = await this.messageModel
+      .find({ conversation: conversationId })
+      .exec();
+    const objectIdQuery = await this.messageModel
+      .find({ conversation: new Types.ObjectId(conversationId) })
+      .exec();
     return {
       conversationId,
       stringQueryCount: stringQuery.length,
       objectIdQueryCount: objectIdQuery.length,
       stringQuerySample: stringQuery.slice(0, 2),
-      objectIdQuerySample: objectIdQuery.slice(0, 2)
+      objectIdQuerySample: objectIdQuery.slice(0, 2),
     };
   }
 
@@ -153,16 +179,14 @@ export class ChatService {
   async markAsRead(messageId: string, userId: string) {
     const isGuest = userId.startsWith('guest_');
     const update: any = { isRead: true };
-    
+
     if (!isGuest) {
       update.$addToSet = { readBy: new Types.ObjectId(userId) };
     }
 
-    return this.messageModel.findByIdAndUpdate(
-      messageId,
-      update,
-      { new: true },
-    );
+    return this.messageModel.findByIdAndUpdate(messageId, update, {
+      new: true,
+    });
   }
 
   async getSupportConversations() {

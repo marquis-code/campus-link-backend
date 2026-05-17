@@ -26,7 +26,10 @@ export class CategoriesService {
     const cached: any = await this.cacheManager.get(this.CACHE_KEY);
     if (cached) return cached;
 
-    const categories = await this.categoryModel.find({ isActive: true }).sort({ name: 1 }).lean();
+    const categories = await this.categoryModel
+      .find({ isActive: true })
+      .sort({ name: 1 })
+      .lean();
     await this.cacheManager.set(this.CACHE_KEY, categories, this.CACHE_TTL);
     return categories;
   }

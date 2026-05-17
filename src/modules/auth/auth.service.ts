@@ -9,7 +9,14 @@ import { Model } from 'mongoose';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { User, UserDocument, UserRole } from '../../schemas/user.schema';
-import { SignupDto, LoginDto, UpdateProfileDto, ChangePasswordDto, ForgotPasswordDto, ResetPasswordDto } from './dto/auth.dto';
+import {
+  SignupDto,
+  LoginDto,
+  UpdateProfileDto,
+  ChangePasswordDto,
+  ForgotPasswordDto,
+  ResetPasswordDto,
+} from './dto/auth.dto';
 
 import { FirebaseService } from '../firebase/firebase.service';
 import { MailService } from '../mail/mail.service';
@@ -31,8 +38,8 @@ export class AuthService {
       throw new BadRequestException('Email not found in social account');
     }
 
-    let user = await this.userModel.findOne({ 
-      $or: [{ firebaseUid: uid }, { email: email.toLowerCase() }] 
+    let user = await this.userModel.findOne({
+      $or: [{ firebaseUid: uid }, { email: email.toLowerCase() }],
     });
 
     if (!user) {
@@ -63,7 +70,9 @@ export class AuthService {
 
   async signup(dto: SignupDto) {
     // Check if user already exists
-    const existing = await this.userModel.findOne({ email: dto.email.toLowerCase() });
+    const existing = await this.userModel.findOne({
+      email: dto.email.toLowerCase(),
+    });
     if (existing) {
       throw new ConflictException('Email already registered');
     }
@@ -80,7 +89,9 @@ export class AuthService {
     });
 
     // Fire-and-forget welcome email
-    this.mailService.sendWelcomeEmail(user.email, user.name || dto.name).catch(() => {});
+    this.mailService
+      .sendWelcomeEmail(user.email, user.name || dto.name)
+      .catch(() => {});
 
     const token = this.generateToken(user);
 
@@ -151,10 +162,15 @@ export class AuthService {
     }
 
     if (!user.password) {
-      throw new BadRequestException('Account does not have a local password. Please use social login.');
+      throw new BadRequestException(
+        'Account does not have a local password. Please use social login.',
+      );
     }
 
-    const isCurrentValid = await bcrypt.compare(dto.currentPassword, user.password);
+    const isCurrentValid = await bcrypt.compare(
+      dto.currentPassword,
+      user.password,
+    );
     if (!isCurrentValid) {
       throw new BadRequestException('Current password is incorrect');
     }
@@ -171,15 +187,23 @@ export class AuthService {
   }
 
   async forgotPassword(dto: ForgotPasswordDto) {
-    const user = await this.userModel.findOne({ email: dto.email.toLowerCase() });
-    
+    const user = await this.userModel.findOne({
+      email: dto.email.toLowerCase(),
+    });
+
     // Always return success to prevent email enumeration
     if (!user) {
-      return { message: 'If an account with that email exists, we sent a password reset link.' };
+      return {
+        message:
+          'If an account with that email exists, we sent a password reset link.',
+      };
     }
 
     if (!user.password) {
-      return { message: 'This account uses Google sign-in. Please log in with Google instead.' };
+      return {
+        message:
+          'This account uses Google sign-in. Please log in with Google instead.',
+      };
     }
 
     // Generate a short-lived reset token (15 minutes)
@@ -190,21 +214,28 @@ export class AuthService {
 
     // Send reset email
     const resetUrl = `${process.env.STUDENT_URL || 'http://localhost:3002'}/reset-password?token=${resetToken}`;
-    
+
     try {
-      await this.mailService.sendPasswordResetEmail(user.email, user.name, resetUrl);
+      await this.mailService.sendPasswordResetEmail(
+        user.email,
+        user.name,
+        resetUrl,
+      );
     } catch (e) {
       // Log but don't fail — the token is still valid
       console.error('Failed to send reset email:', e.message);
     }
 
-    return { message: 'If an account with that email exists, we sent a password reset link.' };
+    return {
+      message:
+        'If an account with that email exists, we sent a password reset link.',
+    };
   }
 
   async resetPassword(dto: ResetPasswordDto) {
     try {
       const decoded = this.jwtService.verify(dto.token);
-      
+
       if (decoded.type !== 'password_reset') {
         throw new BadRequestException('Invalid reset token.');
       }
@@ -218,10 +249,14 @@ export class AuthService {
       user.password = await bcrypt.hash(dto.newPassword, salt);
       await user.save();
 
-      return { message: 'Password has been reset successfully. You can now sign in.' };
+      return {
+        message: 'Password has been reset successfully. You can now sign in.',
+      };
     } catch (e) {
       if (e instanceof BadRequestException) throw e;
-      throw new BadRequestException('Reset link has expired or is invalid. Please request a new one.');
+      throw new BadRequestException(
+        'Reset link has expired or is invalid. Please request a new one.',
+      );
     }
   }
 

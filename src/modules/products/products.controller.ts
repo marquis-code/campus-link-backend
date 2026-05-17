@@ -37,7 +37,10 @@ export class ProductsController {
   @Get('seller/mine')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.SELLER)
-  findMine(@CurrentUser('_id') userId: string, @Query() query: ProductQueryDto) {
+  findMine(
+    @CurrentUser('_id') userId: string,
+    @Query() query: ProductQueryDto,
+  ) {
     return this.productsService.findBySeller(userId, query);
   }
 
@@ -79,7 +82,10 @@ export class ProductsController {
   @Patch(':id/status')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
-  updateStatus(@Param('id', ParseObjectIdPipe) id: string, @Body() dto: UpdateProductStatusDto) {
+  updateStatus(
+    @Param('id', ParseObjectIdPipe) id: string,
+    @Body() dto: UpdateProductStatusDto,
+  ) {
     return this.productsService.updateStatus(id, dto);
   }
 

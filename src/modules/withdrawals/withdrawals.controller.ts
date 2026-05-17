@@ -9,7 +9,10 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { WithdrawalsService } from './withdrawals.service';
-import { CreateWithdrawalDto, UpdateWithdrawalStatusDto } from './dto/withdrawal.dto';
+import {
+  CreateWithdrawalDto,
+  UpdateWithdrawalStatusDto,
+} from './dto/withdrawal.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -25,10 +28,7 @@ export class WithdrawalsController {
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.STUDENT, UserRole.SELLER)
-  create(
-    @CurrentUser('_id') userId: string,
-    @Body() dto: CreateWithdrawalDto,
-  ) {
+  create(@CurrentUser('_id') userId: string, @Body() dto: CreateWithdrawalDto) {
     return this.withdrawalsService.create(userId, dto);
   }
 

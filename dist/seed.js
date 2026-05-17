@@ -46,33 +46,77 @@ async function seed() {
     const campuses = [
         { name: 'University of Lagos (UNILAG)', location: 'Lagos, Nigeria' },
         { name: 'Lagos State University (LASU)', location: 'Ojo, Lagos, Nigeria' },
-        { name: 'Yaba College of Technology (YABATECH)', location: 'Yaba, Lagos, Nigeria' },
-        { name: 'Obafemi Awolowo University (OAU)', location: 'Ile-Ife, Osun, Nigeria' },
+        {
+            name: 'Yaba College of Technology (YABATECH)',
+            location: 'Yaba, Lagos, Nigeria',
+        },
+        {
+            name: 'Obafemi Awolowo University (OAU)',
+            location: 'Ile-Ife, Osun, Nigeria',
+        },
         { name: 'University of Ibadan (UI)', location: 'Ibadan, Oyo, Nigeria' },
-        { name: 'Federal University of Technology Akure (FUTA)', location: 'Akure, Ondo, Nigeria' },
-        { name: 'University of Nigeria Nsukka (UNN)', location: 'Nsukka, Enugu, Nigeria' },
-        { name: 'Nnamdi Azikiwe University (UNIZIK)', location: 'Awka, Anambra, Nigeria' },
-        { name: 'Federal University of Technology Owerri (FUTO)', location: 'Owerri, Imo, Nigeria' },
-        { name: 'University of Benin (UNIBEN)', location: 'Benin City, Edo, Nigeria' },
-        { name: 'University of Port Harcourt (UNIPORT)', location: 'Port Harcourt, Rivers, Nigeria' },
-        { name: 'University of Calabar (UNICAL)', location: 'Calabar, Cross River, Nigeria' },
-        { name: 'Ahmadu Bello University (ABU)', location: 'Zaria, Kaduna, Nigeria' },
-        { name: 'University of Ilorin (UNILORIN)', location: 'Ilorin, Kwara, Nigeria' },
+        {
+            name: 'Federal University of Technology Akure (FUTA)',
+            location: 'Akure, Ondo, Nigeria',
+        },
+        {
+            name: 'University of Nigeria Nsukka (UNN)',
+            location: 'Nsukka, Enugu, Nigeria',
+        },
+        {
+            name: 'Nnamdi Azikiwe University (UNIZIK)',
+            location: 'Awka, Anambra, Nigeria',
+        },
+        {
+            name: 'Federal University of Technology Owerri (FUTO)',
+            location: 'Owerri, Imo, Nigeria',
+        },
+        {
+            name: 'University of Benin (UNIBEN)',
+            location: 'Benin City, Edo, Nigeria',
+        },
+        {
+            name: 'University of Port Harcourt (UNIPORT)',
+            location: 'Port Harcourt, Rivers, Nigeria',
+        },
+        {
+            name: 'University of Calabar (UNICAL)',
+            location: 'Calabar, Cross River, Nigeria',
+        },
+        {
+            name: 'Ahmadu Bello University (ABU)',
+            location: 'Zaria, Kaduna, Nigeria',
+        },
+        {
+            name: 'University of Ilorin (UNILORIN)',
+            location: 'Ilorin, Kwara, Nigeria',
+        },
         { name: 'Bayero University Kano (BUK)', location: 'Kano, Nigeria' },
-        { name: 'University of Abuja (UNIABUJA)', location: 'Gwagwalada, Abuja, Nigeria' },
+        {
+            name: 'University of Abuja (UNIABUJA)',
+            location: 'Gwagwalada, Abuja, Nigeria',
+        },
         { name: 'University of Oxford', location: 'Oxford, United Kingdom' },
         { name: 'University of Cambridge', location: 'Cambridge, United Kingdom' },
         { name: 'Imperial College London', location: 'London, United Kingdom' },
         { name: 'Harvard University', location: 'Cambridge, MA, USA' },
         { name: 'Stanford University', location: 'Stanford, CA, USA' },
-        { name: 'Massachusetts Institute of Technology (MIT)', location: 'Cambridge, MA, USA' },
+        {
+            name: 'Massachusetts Institute of Technology (MIT)',
+            location: 'Cambridge, MA, USA',
+        },
         { name: 'University of Toronto', location: 'Toronto, Canada' },
-        { name: 'University of British Columbia (UBC)', location: 'Vancouver, Canada' },
+        {
+            name: 'University of British Columbia (UBC)',
+            location: 'Vancouver, Canada',
+        },
         { name: 'University of Cape Town', location: 'Cape Town, South Africa' },
         { name: 'National University of Singapore (NUS)', location: 'Singapore' },
     ];
     for (const campus of campuses) {
-        await CampusModel.findOneAndUpdate({ name: campus.name }, campus, { upsert: true });
+        await CampusModel.findOneAndUpdate({ name: campus.name }, campus, {
+            upsert: true,
+        });
     }
     console.log('✅ Campuses seeded');
     const categories = [
@@ -82,7 +126,11 @@ async function seed() {
         { name: 'Electronics', icon: '📱', description: 'Gadgets and electronics' },
         { name: 'Beauty', icon: '💄', description: 'Beauty and skincare products' },
         { name: 'Services', icon: '🛠️', description: 'Professional services' },
-        { name: 'Books', icon: '📚', description: 'Books and educational materials' },
+        {
+            name: 'Books',
+            icon: '📚',
+            description: 'Books and educational materials',
+        },
         { name: 'Health', icon: '💪', description: 'Health and fitness' },
         { name: 'Accessories', icon: '⌚', description: 'Accessories and jewelry' },
         { name: 'Others', icon: '📦', description: 'Other products' },
@@ -95,7 +143,9 @@ async function seed() {
     console.log('✅ Categories seeded');
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash('admin123', salt);
-    const defaultCampus = await CampusModel.findOne({ name: 'University of Lagos (UNILAG)' });
+    const defaultCampus = await CampusModel.findOne({
+        name: 'University of Lagos (UNILAG)',
+    });
     await UserModel.findOneAndUpdate({ email: 'admin@campuslink.com' }, {
         name: 'CampusLink Admin',
         email: 'admin@campuslink.com',
@@ -139,11 +189,13 @@ async function seed() {
             category: categoryMap['Food'],
             seller: seller._id,
             campus: defaultCampus._id,
-            images: ['https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=800'],
+            images: [
+                'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=800',
+            ],
             stock: 50,
             commissionPercentage: 10,
             commissionAmount: 450,
-            status: 'active'
+            status: 'active',
         },
         {
             name: 'Savage Dior Perfume',
@@ -152,11 +204,13 @@ async function seed() {
             category: categoryMap['Perfume'],
             seller: seller._id,
             campus: defaultCampus._id,
-            images: ['https://images.unsplash.com/photo-1541643600914-78b084683601?w=800'],
+            images: [
+                'https://images.unsplash.com/photo-1541643600914-78b084683601?w=800',
+            ],
             stock: 20,
             commissionPercentage: 15,
             commissionAmount: 2250,
-            status: 'active'
+            status: 'active',
         },
         {
             name: 'MacBook Pro M2 Sleeve',
@@ -165,11 +219,13 @@ async function seed() {
             category: categoryMap['Accessories'],
             seller: seller._id,
             campus: defaultCampus._id,
-            images: ['https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=800'],
+            images: [
+                'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=800',
+            ],
             stock: 15,
             commissionPercentage: 12,
             commissionAmount: 960,
-            status: 'active'
+            status: 'active',
         },
         {
             name: 'Wireless Noise Cancelling Headphones',
@@ -178,11 +234,13 @@ async function seed() {
             category: categoryMap['Electronics'],
             seller: seller._id,
             campus: defaultCampus._id,
-            images: ['https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800'],
+            images: [
+                'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800',
+            ],
             stock: 10,
             commissionPercentage: 8,
             commissionAmount: 2000,
-            status: 'active'
+            status: 'active',
         },
         {
             name: 'Organic Skincare Set',
@@ -191,15 +249,19 @@ async function seed() {
             category: categoryMap['Beauty'],
             seller: seller._id,
             campus: defaultCampus._id,
-            images: ['https://images.unsplash.com/photo-1556228578-0d85b1a4d571?w=800'],
+            images: [
+                'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?w=800',
+            ],
             stock: 30,
             commissionPercentage: 20,
             commissionAmount: 2400,
-            status: 'active'
-        }
+            status: 'active',
+        },
     ];
     for (const product of products) {
-        await ProductModel.findOneAndUpdate({ name: product.name }, product, { upsert: true });
+        await ProductModel.findOneAndUpdate({ name: product.name }, product, {
+            upsert: true,
+        });
     }
     console.log('✅ Products seeded');
     await app.close();

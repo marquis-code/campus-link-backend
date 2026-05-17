@@ -109,7 +109,9 @@ let PaystackService = PaystackService_1 = class PaystackService {
     }
     async getBanks() {
         try {
-            const response = await axios_1.default.get(`${this.baseUrl}/bank`, { headers: this.headers });
+            const response = await axios_1.default.get(`${this.baseUrl}/bank`, {
+                headers: this.headers,
+            });
             return response.data.data;
         }
         catch (error) {

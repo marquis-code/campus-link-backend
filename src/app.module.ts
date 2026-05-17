@@ -17,6 +17,7 @@ import { ChatModule } from './modules/chat/chat.module';
 import { MailModule } from './modules/mail/mail.module';
 import { FirebaseModule } from './modules/firebase/firebase.module';
 import { SeedModule } from './common/services/seed.module';
+import { HealthModule } from './modules/health/health.module';
 
 import { CacheModule } from '@nestjs/cache-manager';
 import * as redisStore from 'cache-manager-redis-yet';
@@ -39,7 +40,7 @@ import { WalletsModule } from './modules/wallets/wallets.module';
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => {
         const redisUrl = configService.get('REDIS_URL');
-        
+
         if (!redisUrl || redisUrl === 'memory') {
           console.log('Using in-memory cache');
           return { ttl: 600 };
@@ -52,12 +53,14 @@ import { WalletsModule } from './modules/wallets/wallets.module';
               connectTimeout: 5000,
               reconnectStrategy: (retries) => {
                 if (retries > 5) {
-                  console.warn('Redis reconnection failed too many times. Continuing with broken cache.');
+                  console.warn(
+                    'Redis reconnection failed too many times. Continuing with broken cache.',
+                  );
                   return false;
                 }
                 return Math.min(retries * 100, 3000);
-              }
-            }
+              },
+            },
           });
 
           // Aggressively catch client errors to prevent process crash
@@ -69,7 +72,10 @@ import { WalletsModule } from './modules/wallets/wallets.module';
 
           return { store };
         } catch (e) {
-          console.error('Failed to connect to Redis, falling back to memory cache:', e.message);
+          console.error(
+            'Failed to connect to Redis, falling back to memory cache:',
+            e.message,
+          );
           return { ttl: 600 };
         }
       },
@@ -94,6 +100,7 @@ import { WalletsModule } from './modules/wallets/wallets.module';
     SeedModule,
     PaymentsModule,
     WalletsModule,
+    HealthModule,
   ],
 })
 export class AppModule {}

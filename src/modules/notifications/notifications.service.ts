@@ -1,7 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { Notification, NotificationDocument, NotificationType } from '../../schemas/notification.schema';
+import {
+  Notification,
+  NotificationDocument,
+  NotificationType,
+} from '../../schemas/notification.schema';
 import { NotificationsGateway } from './notifications.gateway';
 import { MailService } from '../mail/mail.service';
 
@@ -28,7 +32,8 @@ export class NotificationsService {
     sendEmail?: boolean;
     emailAddress?: string;
   }) {
-    const userId = typeof data.user === 'string' ? data.user : data.user.toString();
+    const userId =
+      typeof data.user === 'string' ? data.user : data.user.toString();
 
     // Persist to DB
     const notification = await this.notificationModel.create({
@@ -46,23 +51,30 @@ export class NotificationsService {
     const unreadCount = await this.notificationModel.countDocuments({
       user: new Types.ObjectId(userId),
       isRead: false,
-    } as any);
+    });
     this.notificationsGateway.sendUnreadCount(userId, unreadCount);
 
     // Send email notification if user is offline or explicitly requested
     if (data.sendEmail && data.emailAddress) {
-      this.mailService.sendMail(
-        data.emailAddress,
-        `CampusLink: ${data.title}`,
-        this.buildNotificationEmail(data.title, data.message),
-      ).catch(() => {});
-    } else if (!this.notificationsGateway.isUserOnline(userId) && data.emailAddress) {
+      this.mailService
+        .sendMail(
+          data.emailAddress,
+          `CampusLink: ${data.title}`,
+          this.buildNotificationEmail(data.title, data.message),
+        )
+        .catch(() => {});
+    } else if (
+      !this.notificationsGateway.isUserOnline(userId) &&
+      data.emailAddress
+    ) {
       // Aggressive: email offline users automatically
-      this.mailService.sendMail(
-        data.emailAddress,
-        `CampusLink: ${data.title}`,
-        this.buildNotificationEmail(data.title, data.message),
-      ).catch(() => {});
+      this.mailService
+        .sendMail(
+          data.emailAddress,
+          `CampusLink: ${data.title}`,
+          this.buildNotificationEmail(data.title, data.message),
+        )
+        .catch(() => {});
     }
 
     this.logger.log(`Notification sent to ${userId}: ${data.title}`);
@@ -71,7 +83,12 @@ export class NotificationsService {
 
   // ——— Convenience methods for common notification types ———
 
-  async notifyNewOrder(sellerId: string, sellerEmail: string, orderRef: string, amount: number) {
+  async notifyNewOrder(
+    sellerId: string,
+    sellerEmail: string,
+    orderRef: string,
+    amount: number,
+  ) {
     return this.create({
       user: sellerId,
       title: 'New Order Received! 🛒',
@@ -82,7 +99,12 @@ export class NotificationsService {
     });
   }
 
-  async notifyEarning(promoterId: string, email: string, amount: number, productName: string) {
+  async notifyEarning(
+    promoterId: string,
+    email: string,
+    amount: number,
+    productName: string,
+  ) {
     return this.create({
       user: promoterId,
       title: 'Commission Earned! 💰',
@@ -93,7 +115,11 @@ export class NotificationsService {
     });
   }
 
-  async notifyWithdrawalApproved(userId: string, email: string, amount: number) {
+  async notifyWithdrawalApproved(
+    userId: string,
+    email: string,
+    amount: number,
+  ) {
     return this.create({
       user: userId,
       title: 'Withdrawal Approved ✅',
@@ -105,7 +131,12 @@ export class NotificationsService {
     });
   }
 
-  async notifyWithdrawalRejected(userId: string, email: string, amount: number, reason: string) {
+  async notifyWithdrawalRejected(
+    userId: string,
+    email: string,
+    amount: number,
+    reason: string,
+  ) {
     return this.create({
       user: userId,
       title: 'Withdrawal Rejected ❌',
@@ -117,7 +148,11 @@ export class NotificationsService {
     });
   }
 
-  async notifyProductApproved(sellerId: string, email: string, productName: string) {
+  async notifyProductApproved(
+    sellerId: string,
+    email: string,
+    productName: string,
+  ) {
     return this.create({
       user: sellerId,
       title: 'Product Approved! 🎉',
@@ -128,7 +163,12 @@ export class NotificationsService {
     });
   }
 
-  async notifyProductRejected(sellerId: string, email: string, productName: string, reason: string) {
+  async notifyProductRejected(
+    sellerId: string,
+    email: string,
+    productName: string,
+    reason: string,
+  ) {
     return this.create({
       user: sellerId,
       title: 'Product Rejected',
@@ -140,7 +180,11 @@ export class NotificationsService {
     });
   }
 
-  async notifyNewChatMessage(userId: string, senderName: string, preview: string) {
+  async notifyNewChatMessage(
+    userId: string,
+    senderName: string,
+    preview: string,
+  ) {
     return this.create({
       user: userId,
       title: `New message from ${senderName}`,
@@ -155,7 +199,10 @@ export class NotificationsService {
   async findByUser(userId: string, page = 1, limit = 20) {
     const skip = (page - 1) * limit;
     const filter = { user: new Types.ObjectId(userId) } as any;
-    const unreadFilter = { user: new Types.ObjectId(userId), isRead: false } as any;
+    const unreadFilter = {
+      user: new Types.ObjectId(userId),
+      isRead: false,
+    } as any;
 
     const [notifications, total, unreadCount] = await Promise.all([
       this.notificationModel
@@ -168,12 +215,18 @@ export class NotificationsService {
       this.notificationModel.countDocuments(unreadFilter),
     ]);
 
-    return { notifications, total, unreadCount, page, pages: Math.ceil(total / limit) };
+    return {
+      notifications,
+      total,
+      unreadCount,
+      page,
+      pages: Math.ceil(total / limit),
+    };
   }
 
   async markAsRead(notificationId: string, userId: string) {
     const result = await this.notificationModel.findOneAndUpdate(
-      { _id: notificationId, user: new Types.ObjectId(userId) } as any,
+      { _id: notificationId, user: new Types.ObjectId(userId) },
       { isRead: true },
       { new: true },
     );
@@ -182,7 +235,7 @@ export class NotificationsService {
     const unreadCount = await this.notificationModel.countDocuments({
       user: new Types.ObjectId(userId),
       isRead: false,
-    } as any);
+    });
     this.notificationsGateway.sendUnreadCount(userId, unreadCount);
 
     return result;
@@ -190,7 +243,7 @@ export class NotificationsService {
 
   async markAllAsRead(userId: string) {
     await this.notificationModel.updateMany(
-      { user: new Types.ObjectId(userId), isRead: false } as any,
+      { user: new Types.ObjectId(userId), isRead: false },
       { isRead: true } as any,
     );
 
@@ -202,7 +255,7 @@ export class NotificationsService {
     const count = await this.notificationModel.countDocuments({
       user: new Types.ObjectId(userId),
       isRead: false,
-    } as any);
+    });
     return { count };
   }
 

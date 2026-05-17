@@ -16,7 +16,12 @@ export class PaystackService {
     };
   }
 
-  async createCustomer(email: string, firstName: string, lastName: string, phone: string) {
+  async createCustomer(
+    email: string,
+    firstName: string,
+    lastName: string,
+    phone: string,
+  ) {
     try {
       const response = await axios.post(
         `${this.baseUrl}/customer`,
@@ -25,7 +30,10 @@ export class PaystackService {
       );
       return response.data.data;
     } catch (error) {
-      this.logger.error('Failed to create Paystack customer', error.response?.data || error.message);
+      this.logger.error(
+        'Failed to create Paystack customer',
+        error.response?.data || error.message,
+      );
       throw error;
     }
   }
@@ -39,12 +47,20 @@ export class PaystackService {
       );
       return response.data.data;
     } catch (error) {
-      this.logger.error('Failed to create Virtual Account', error.response?.data || error.message);
+      this.logger.error(
+        'Failed to create Virtual Account',
+        error.response?.data || error.message,
+      );
       throw error;
     }
   }
 
-  async initializeTransaction(email: string, amount: number, reference: string, callbackUrl?: string) {
+  async initializeTransaction(
+    email: string,
+    amount: number,
+    reference: string,
+    callbackUrl?: string,
+  ) {
     try {
       const response = await axios.post(
         `${this.baseUrl}/transaction/initialize`,
@@ -58,7 +74,10 @@ export class PaystackService {
       );
       return response.data.data;
     } catch (error) {
-      this.logger.error('Failed to initialize Paystack transaction', error.response?.data || error.message);
+      this.logger.error(
+        'Failed to initialize Paystack transaction',
+        error.response?.data || error.message,
+      );
       throw error;
     }
   }
@@ -71,12 +90,19 @@ export class PaystackService {
       );
       return response.data.data;
     } catch (error) {
-      this.logger.error('Failed to verify Paystack transaction', error.response?.data || error.message);
+      this.logger.error(
+        'Failed to verify Paystack transaction',
+        error.response?.data || error.message,
+      );
       throw error;
     }
   }
 
-  async createTransferRecipient(name: string, accountNumber: string, bankCode: string) {
+  async createTransferRecipient(
+    name: string,
+    accountNumber: string,
+    bankCode: string,
+  ) {
     try {
       const response = await axios.post(
         `${this.baseUrl}/transferrecipient`,
@@ -91,12 +117,20 @@ export class PaystackService {
       );
       return response.data.data;
     } catch (error) {
-      this.logger.error('Failed to create Transfer Recipient', error.response?.data || error.message);
+      this.logger.error(
+        'Failed to create Transfer Recipient',
+        error.response?.data || error.message,
+      );
       throw error;
     }
   }
 
-  async initiateTransfer(amount: number, recipientCode: string, reference: string, reason?: string) {
+  async initiateTransfer(
+    amount: number,
+    recipientCode: string,
+    reference: string,
+    reason?: string,
+  ) {
     try {
       const response = await axios.post(
         `${this.baseUrl}/transfer`,
@@ -111,14 +145,19 @@ export class PaystackService {
       );
       return response.data.data;
     } catch (error) {
-      this.logger.error('Failed to initiate transfer', error.response?.data || error.message);
+      this.logger.error(
+        'Failed to initiate transfer',
+        error.response?.data || error.message,
+      );
       throw error;
     }
   }
 
   async getBanks() {
     try {
-      const response = await axios.get(`${this.baseUrl}/bank`, { headers: this.headers });
+      const response = await axios.get(`${this.baseUrl}/bank`, {
+        headers: this.headers,
+      });
       return response.data.data;
     } catch (error) {
       this.logger.error('Failed to fetch banks', error.message);
@@ -134,7 +173,10 @@ export class PaystackService {
       );
       return response.data.data;
     } catch (error) {
-      this.logger.error('Failed to resolve account number', error.response?.data || error.message);
+      this.logger.error(
+        'Failed to resolve account number',
+        error.response?.data || error.message,
+      );
       throw error;
     }
   }

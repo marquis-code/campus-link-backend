@@ -67,10 +67,7 @@ export class AdminController {
   }
 
   @Get('wallets')
-  getAllWallets(
-    @Query('page') page?: number,
-    @Query('limit') limit?: number,
-  ) {
+  getAllWallets(@Query('page') page?: number, @Query('limit') limit?: number) {
     return this.adminService.getAllWallets(page, limit);
   }
 }

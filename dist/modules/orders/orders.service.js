@@ -91,7 +91,9 @@ let OrdersService = class OrdersService {
             try {
                 const customer = await this.paystackService.createCustomer(dto.buyerEmail, dto.buyerName.split(' ')[0], dto.buyerName.split(' ')[1] || '', dto.buyerPhone);
                 if (dto.paymentMethod === 'paystack') {
-                    const payment = await this.paystackService.initializeTransaction(dto.buyerEmail, totalPayable, `order_${order._id}`, process.env.STUDENT_URL ? `${process.env.STUDENT_URL}/orders/success` : undefined);
+                    const payment = await this.paystackService.initializeTransaction(dto.buyerEmail, totalPayable, `order_${order._id}`, process.env.STUDENT_URL
+                        ? `${process.env.STUDENT_URL}/orders/success`
+                        : undefined);
                     await this.orderModel.findByIdAndUpdate(order._id, {
                         paymentReference: payment.reference,
                     });

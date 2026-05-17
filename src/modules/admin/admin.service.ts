@@ -6,9 +6,15 @@ import { Product, ProductDocument } from '../../schemas/product.schema';
 import { Order, OrderDocument } from '../../schemas/order.schema';
 import { Earning, EarningDocument } from '../../schemas/earning.schema';
 import { Referral, ReferralDocument } from '../../schemas/referral.schema';
-import { Withdrawal, WithdrawalDocument } from '../../schemas/withdrawal.schema';
+import {
+  Withdrawal,
+  WithdrawalDocument,
+} from '../../schemas/withdrawal.schema';
 import { Wallet, WalletDocument } from '../../schemas/wallet.schema';
-import { Transaction, TransactionDocument } from '../../schemas/transaction.schema';
+import {
+  Transaction,
+  TransactionDocument,
+} from '../../schemas/transaction.schema';
 
 @Injectable()
 export class AdminService {
@@ -18,9 +24,11 @@ export class AdminService {
     @InjectModel(Order.name) private orderModel: Model<OrderDocument>,
     @InjectModel(Earning.name) private earningModel: Model<EarningDocument>,
     @InjectModel(Referral.name) private referralModel: Model<ReferralDocument>,
-    @InjectModel(Withdrawal.name) private withdrawalModel: Model<WithdrawalDocument>,
+    @InjectModel(Withdrawal.name)
+    private withdrawalModel: Model<WithdrawalDocument>,
     @InjectModel(Wallet.name) private walletModel: Model<WalletDocument>,
-    @InjectModel(Transaction.name) private transactionModel: Model<TransactionDocument>,
+    @InjectModel(Transaction.name)
+    private transactionModel: Model<TransactionDocument>,
   ) {}
 
   async getAllTransactions(page = 1, limit = 20) {
@@ -95,9 +103,21 @@ export class AdminService {
     ]);
 
     return {
-      users: { total: totalUsers, students: totalStudents, sellers: totalSellers },
-      products: { total: totalProducts, active: activeProducts, pending: pendingProducts },
-      orders: { total: totalOrders, confirmed: confirmedOrders, pending: pendingOrders },
+      users: {
+        total: totalUsers,
+        students: totalStudents,
+        sellers: totalSellers,
+      },
+      products: {
+        total: totalProducts,
+        active: activeProducts,
+        pending: pendingProducts,
+      },
+      orders: {
+        total: totalOrders,
+        confirmed: confirmedOrders,
+        pending: pendingOrders,
+      },
       referrals: { total: totalReferrals },
       withdrawals: { pending: pendingWithdrawals },
       revenue: {
@@ -108,7 +128,12 @@ export class AdminService {
     };
   }
 
-  async getUsers(query: { role?: string; page?: number; limit?: number; search?: string }) {
+  async getUsers(query: {
+    role?: string;
+    page?: number;
+    limit?: number;
+    search?: string;
+  }) {
     const { role, page = 1, limit = 20, search } = query;
     const filter: any = {};
     if (role) filter.role = role;
@@ -157,7 +182,13 @@ export class AdminService {
 
   async getTopPromoters(limit = 10) {
     return this.earningModel.aggregate([
-      { $group: { _id: '$promoter', totalEarnings: { $sum: '$amount' }, salesCount: { $sum: 1 } } },
+      {
+        $group: {
+          _id: '$promoter',
+          totalEarnings: { $sum: '$amount' },
+          salesCount: { $sum: 1 },
+        },
+      },
       { $sort: { totalEarnings: -1 } },
       { $limit: limit },
       {

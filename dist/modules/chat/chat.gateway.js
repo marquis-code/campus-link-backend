@@ -105,7 +105,9 @@ let ChatGateway = ChatGateway_1 = class ChatGateway {
                     this.server.to('admins').emit('message_notification', {
                         conversationId: dto.conversationId,
                         message,
-                        senderName: message.sender?.name || message.guestSender?.name || 'Guest',
+                        senderName: message.sender?.name ||
+                            message.guestSender?.name ||
+                            'Guest',
                     });
                 }
                 for (const participant of conversation.participants) {
@@ -114,7 +116,9 @@ let ChatGateway = ChatGateway_1 = class ChatGateway {
                         this.server.to(`user_${pId}`).emit('message_notification', {
                             conversationId: dto.conversationId,
                             message,
-                            senderName: message.sender?.name || message.guestSender?.name || 'Someone',
+                            senderName: message.sender?.name ||
+                                message.guestSender?.name ||
+                                'Someone',
                         });
                     }
                 }
@@ -123,7 +127,10 @@ let ChatGateway = ChatGateway_1 = class ChatGateway {
         }
         catch (error) {
             this.logger.error(`Failed to handle send_message: ${error.message}`, error.stack);
-            client.emit('error', { message: 'Failed to send message', error: error.message });
+            client.emit('error', {
+                message: 'Failed to send message',
+                error: error.message,
+            });
             throw error;
         }
     }
@@ -155,7 +162,8 @@ let ChatGateway = ChatGateway_1 = class ChatGateway {
         this.server.to(`conv_${conversationId}`).emit('new_message', message);
     }
     isUserOnline(userId) {
-        return this.userSockets.has(userId) && (this.userSockets.get(userId)?.size || 0) > 0;
+        return (this.userSockets.has(userId) &&
+            (this.userSockets.get(userId)?.size || 0) > 0);
     }
 };
 exports.ChatGateway = ChatGateway;

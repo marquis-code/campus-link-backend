@@ -72,7 +72,8 @@ let NotificationsGateway = NotificationsGateway_1 = class NotificationsGateway {
         this.server.emit('system_alert', { title, message, timestamp: new Date() });
     }
     isUserOnline(userId) {
-        return this.onlineUsers.has(userId) && (this.onlineUsers.get(userId)?.size || 0) > 0;
+        return (this.onlineUsers.has(userId) &&
+            (this.onlineUsers.get(userId)?.size || 0) > 0);
     }
     getOnlineUsers() {
         return Array.from(this.onlineUsers.keys());

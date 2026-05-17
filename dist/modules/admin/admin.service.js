@@ -97,9 +97,21 @@ let AdminService = class AdminService {
             ]),
         ]);
         return {
-            users: { total: totalUsers, students: totalStudents, sellers: totalSellers },
-            products: { total: totalProducts, active: activeProducts, pending: pendingProducts },
-            orders: { total: totalOrders, confirmed: confirmedOrders, pending: pendingOrders },
+            users: {
+                total: totalUsers,
+                students: totalStudents,
+                sellers: totalSellers,
+            },
+            products: {
+                total: totalProducts,
+                active: activeProducts,
+                pending: pendingProducts,
+            },
+            orders: {
+                total: totalOrders,
+                confirmed: confirmedOrders,
+                pending: pendingOrders,
+            },
             referrals: { total: totalReferrals },
             withdrawals: { pending: pendingWithdrawals },
             revenue: {
@@ -153,7 +165,13 @@ let AdminService = class AdminService {
     }
     async getTopPromoters(limit = 10) {
         return this.earningModel.aggregate([
-            { $group: { _id: '$promoter', totalEarnings: { $sum: '$amount' }, salesCount: { $sum: 1 } } },
+            {
+                $group: {
+                    _id: '$promoter',
+                    totalEarnings: { $sum: '$amount' },
+                    salesCount: { $sum: 1 },
+                },
+            },
             { $sort: { totalEarnings: -1 } },
             { $limit: limit },
             {

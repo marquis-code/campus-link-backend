@@ -31,9 +31,14 @@ let WalletsService = WalletsService_1 = class WalletsService {
         this.paystackService = paystackService;
     }
     async getOrCreateWallet(userId) {
-        let wallet = await this.walletModel.findOne({ user: new mongoose_2.Types.ObjectId(userId) });
+        let wallet = await this.walletModel.findOne({
+            user: new mongoose_2.Types.ObjectId(userId),
+        });
         if (!wallet) {
-            wallet = await this.walletModel.create({ user: new mongoose_2.Types.ObjectId(userId), balance: 0 });
+            wallet = await this.walletModel.create({
+                user: new mongoose_2.Types.ObjectId(userId),
+                balance: 0,
+            });
         }
         return wallet;
     }
@@ -46,7 +51,9 @@ let WalletsService = WalletsService_1 = class WalletsService {
                 .skip(skip)
                 .limit(limit)
                 .lean(),
-            this.transactionModel.countDocuments({ user: new mongoose_2.Types.ObjectId(userId) }),
+            this.transactionModel.countDocuments({
+                user: new mongoose_2.Types.ObjectId(userId),
+            }),
         ]);
         return { transactions, total, page, pages: Math.ceil(total / limit) };
     }
@@ -59,7 +66,7 @@ let WalletsService = WalletsService_1 = class WalletsService {
         const session = await this.walletModel.db.startSession();
         session.startTransaction();
         try {
-            let transaction = await this.transactionModel.findOne({ reference });
+            const transaction = await this.transactionModel.findOne({ reference });
             if (transaction) {
                 if (transaction.status === transaction_schema_1.TransactionStatus.SUCCESS) {
                     await session.abortTransaction();
@@ -72,7 +79,8 @@ let WalletsService = WalletsService_1 = class WalletsService {
                 await transaction.save({ session });
             }
             else {
-                await this.transactionModel.create([{
+                await this.transactionModel.create([
+                    {
                         user: new mongoose_2.Types.ObjectId(userId),
                         wallet: wallet._id,
                         amount,
@@ -82,7 +90,8 @@ let WalletsService = WalletsService_1 = class WalletsService {
                         reference,
                         description,
                         metadata,
-                    }], { session });
+                    },
+                ], { session });
             }
             wallet.balance += amount;
             await wallet.save({ session });
@@ -106,7 +115,8 @@ let WalletsService = WalletsService_1 = class WalletsService {
         const session = await this.walletModel.db.startSession();
         session.startTransaction();
         try {
-            await this.transactionModel.create([{
+            await this.transactionModel.create([
+                {
                     user: new mongoose_2.Types.ObjectId(userId),
                     wallet: wallet._id,
                     amount,
@@ -116,7 +126,8 @@ let WalletsService = WalletsService_1 = class WalletsService {
                     reference,
                     description,
                     metadata,
-                }], { session });
+                },
+            ], { session });
             wallet.balance -= amount;
             await wallet.save({ session });
             await session.commitTransaction();
@@ -144,13 +155,13 @@ let WalletsService = WalletsService_1 = class WalletsService {
             status: transaction_schema_1.TransactionStatus.PENDING,
             reference: payment.reference,
             description: 'Wallet funding initialization',
-            metadata: { callbackUrl }
+            metadata: { callbackUrl },
         });
         return {
             reference: payment.reference,
             amount,
             email,
-            checkoutUrl: payment.authorization_url
+            checkoutUrl: payment.authorization_url,
         };
     }
     async handleFundingWebhook(payload) {
@@ -169,7 +180,7 @@ let WalletsService = WalletsService_1 = class WalletsService {
         const OrderModel = this.walletModel.db.model('Order');
         const confirmedOrders = await OrderModel.find({
             seller: userObjId,
-            status: 'confirmed'
+            status: 'confirmed',
         });
         for (const order of confirmedOrders) {
             const reference = `settle_${order._id}`;
@@ -184,7 +195,7 @@ let WalletsService = WalletsService_1 = class WalletsService {
         const EarningModel = this.walletModel.db.model('Earning');
         const availableEarnings = await EarningModel.find({
             promoter: userObjId,
-            status: 'available'
+            status: 'available',
         });
         for (const earning of availableEarnings) {
             const reference = `order_a_${earning.order}`;

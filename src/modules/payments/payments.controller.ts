@@ -1,4 +1,14 @@
-import { Controller, Post, Get, Body, Headers, BadRequestException, HttpCode, Query, Param } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Body,
+  Headers,
+  BadRequestException,
+  HttpCode,
+  Query,
+  Param,
+} from '@nestjs/common';
 import { PaymentsService } from './payments.service';
 import { PaystackService } from '../../shared/services/paystack.service';
 
@@ -25,7 +35,7 @@ export class PaymentsController {
     }
 
     await this.paymentsService.handleWebhook(payload.event, payload.data);
-    
+
     return { status: 'success' };
   }
 

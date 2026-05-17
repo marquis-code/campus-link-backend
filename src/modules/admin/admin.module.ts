@@ -9,7 +9,10 @@ import { Earning, EarningSchema } from '../../schemas/earning.schema';
 import { Referral, ReferralSchema } from '../../schemas/referral.schema';
 import { Withdrawal, WithdrawalSchema } from '../../schemas/withdrawal.schema';
 import { Wallet, WalletSchema } from '../../schemas/wallet.schema';
-import { Transaction, TransactionSchema } from '../../schemas/transaction.schema';
+import {
+  Transaction,
+  TransactionSchema,
+} from '../../schemas/transaction.schema';
 
 @Module({
   imports: [

@@ -26,9 +26,14 @@ export class WalletsController {
   async initializeFunding(
     @CurrentUser('_id') userId: string,
     @CurrentUser('email') email: string,
-    @Body() body: { amount: number; callbackUrl?: string }
+    @Body() body: { amount: number; callbackUrl?: string },
   ) {
-    return this.walletsService.initializeFunding(userId, body.amount, email, body.callbackUrl);
+    return this.walletsService.initializeFunding(
+      userId,
+      body.amount,
+      email,
+      body.callbackUrl,
+    );
   }
 
   @Post('sync-earnings')

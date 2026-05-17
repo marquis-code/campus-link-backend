@@ -64,11 +64,13 @@ let PaymentsService = PaymentsService_1 = class PaymentsService {
         }
         let order = await this.orderModel.findOne({ paymentReference: reference });
         if (!order) {
-            order = await this.orderModel.findOne({
+            order = await this.orderModel
+                .findOne({
                 buyerEmail: customer.email,
                 totalPayable: amount / 100,
                 status: order_schema_1.OrderStatus.PENDING,
-            }).sort('-createdAt');
+            })
+                .sort('-createdAt');
         }
         if (!order) {
             this.logger.error(`Order not found for charge.success reference: ${reference}`);
@@ -92,7 +94,9 @@ let PaymentsService = PaymentsService_1 = class PaymentsService {
     }
     async handleTransferSuccess(data) {
         const { reference } = data;
-        const withdrawal = await this.withdrawalModel.findOne({ transferReference: reference });
+        const withdrawal = await this.withdrawalModel.findOne({
+            transferReference: reference,
+        });
         if (withdrawal) {
             withdrawal.status = withdrawal_schema_1.WithdrawalStatus.COMPLETED;
             await withdrawal.save();
@@ -107,7 +111,9 @@ let PaymentsService = PaymentsService_1 = class PaymentsService {
     }
     async handleTransferFailed(data) {
         const { reference } = data;
-        const withdrawal = await this.withdrawalModel.findOne({ transferReference: reference });
+        const withdrawal = await this.withdrawalModel.findOne({
+            transferReference: reference,
+        });
         if (withdrawal) {
             withdrawal.status = withdrawal_schema_1.WithdrawalStatus.FAILED;
             await withdrawal.save();

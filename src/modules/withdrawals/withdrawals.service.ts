@@ -5,20 +5,28 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { Withdrawal, WithdrawalDocument, WithdrawalStatus } from '../../schemas/withdrawal.schema';
+import {
+  Withdrawal,
+  WithdrawalDocument,
+  WithdrawalStatus,
+} from '../../schemas/withdrawal.schema';
 import { User, UserDocument } from '../../schemas/user.schema';
 import { Order, OrderDocument } from '../../schemas/order.schema';
 import { NotificationsService } from '../notifications/notifications.service';
 import { EarningsService } from '../earnings/earnings.service';
 import { PaystackService } from '../../shared/services/paystack.service';
 import { WalletsService } from '../wallets/wallets.service';
-import { CreateWithdrawalDto, UpdateWithdrawalStatusDto } from './dto/withdrawal.dto';
+import {
+  CreateWithdrawalDto,
+  UpdateWithdrawalStatusDto,
+} from './dto/withdrawal.dto';
 import { TransactionPurpose } from '../../schemas/transaction.schema';
 
 @Injectable()
 export class WithdrawalsService {
   constructor(
-    @InjectModel(Withdrawal.name) private withdrawalModel: Model<WithdrawalDocument>,
+    @InjectModel(Withdrawal.name)
+    private withdrawalModel: Model<WithdrawalDocument>,
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     @InjectModel(Order.name) private orderModel: Model<OrderDocument>,
     private notificationsService: NotificationsService,
@@ -41,7 +49,7 @@ export class WithdrawalsService {
     const pendingWithdrawal = await this.withdrawalModel.findOne({
       user: new Types.ObjectId(userId),
       status: WithdrawalStatus.PENDING,
-    } as any);
+    });
     if (pendingWithdrawal) {
       throw new BadRequestException(
         'You have a pending withdrawal request. Please wait for it to be processed.',
@@ -64,7 +72,7 @@ export class WithdrawalsService {
       TransactionPurpose.WITHDRAWAL,
       `wd_${withdrawal._id}`,
       `Withdrawal Request #${withdrawal._id.toString().slice(-6).toUpperCase()}`,
-      { withdrawalId: withdrawal._id }
+      { withdrawalId: withdrawal._id },
     );
 
     return withdrawal;
@@ -128,13 +136,16 @@ export class WithdrawalsService {
           withdrawal.amount,
           recipient.recipient_code,
           transferRef,
-          `CampusLink Payout: ${withdrawal.bankAccountName}`
+          `CampusLink Payout: ${withdrawal.bankAccountName}`,
         );
-        
+
         (withdrawal as any).transferReference = transferRef;
         (withdrawal as any).status = WithdrawalStatus.PROCESSING;
       } catch (err) {
-        console.error('Paystack Transfer failed:', err.response?.data || err.message);
+        console.error(
+          'Paystack Transfer failed:',
+          err.response?.data || err.message,
+        );
         // If automated payout fails, we keep status as approved but don't move to processing
         // Admin might need to handle manually or retry
       }
@@ -155,7 +166,7 @@ export class WithdrawalsService {
         TransactionPurpose.REFUND,
         `wd_reject_${withdrawal._id}`,
         `Refund for Rejected Withdrawal #${withdrawal._id.toString().slice(-6).toUpperCase()}`,
-        { withdrawalId: withdrawal._id }
+        { withdrawalId: withdrawal._id },
       );
     }
 

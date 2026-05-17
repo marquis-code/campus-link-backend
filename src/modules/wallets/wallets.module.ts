@@ -3,7 +3,10 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { WalletsService } from './wallets.service';
 import { WalletsController } from './wallets.controller';
 import { Wallet, WalletSchema } from '../../schemas/wallet.schema';
-import { Transaction, TransactionSchema } from '../../schemas/transaction.schema';
+import {
+  Transaction,
+  TransactionSchema,
+} from '../../schemas/transaction.schema';
 import { SharedModule } from '../../shared/services/shared.module';
 
 @Module({

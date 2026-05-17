@@ -72,7 +72,7 @@ let AuthService = class AuthService {
             throw new common_1.BadRequestException('Email not found in social account');
         }
         let user = await this.userModel.findOne({
-            $or: [{ firebaseUid: uid }, { email: email.toLowerCase() }]
+            $or: [{ firebaseUid: uid }, { email: email.toLowerCase() }],
         });
         if (!user) {
             user = await this.userModel.create({
@@ -98,7 +98,9 @@ let AuthService = class AuthService {
         };
     }
     async signup(dto) {
-        const existing = await this.userModel.findOne({ email: dto.email.toLowerCase() });
+        const existing = await this.userModel.findOne({
+            email: dto.email.toLowerCase(),
+        });
         if (existing) {
             throw new common_1.ConflictException('Email already registered');
         }
@@ -109,7 +111,9 @@ let AuthService = class AuthService {
             email: dto.email.toLowerCase(),
             password: hashedPassword,
         });
-        this.mailService.sendWelcomeEmail(user.email, user.name || dto.name).catch(() => { });
+        this.mailService
+            .sendWelcomeEmail(user.email, user.name || dto.name)
+            .catch(() => { });
         const token = this.generateToken(user);
         return {
             user: this.sanitizeUser(user),
@@ -179,12 +183,18 @@ let AuthService = class AuthService {
         return this.userModel.findById(userId).select('-password').lean();
     }
     async forgotPassword(dto) {
-        const user = await this.userModel.findOne({ email: dto.email.toLowerCase() });
+        const user = await this.userModel.findOne({
+            email: dto.email.toLowerCase(),
+        });
         if (!user) {
-            return { message: 'If an account with that email exists, we sent a password reset link.' };
+            return {
+                message: 'If an account with that email exists, we sent a password reset link.',
+            };
         }
         if (!user.password) {
-            return { message: 'This account uses Google sign-in. Please log in with Google instead.' };
+            return {
+                message: 'This account uses Google sign-in. Please log in with Google instead.',
+            };
         }
         const resetToken = this.jwtService.sign({ sub: user._id, email: user.email, type: 'password_reset' }, { expiresIn: '15m' });
         const resetUrl = `${process.env.STUDENT_URL || 'http://localhost:3002'}/reset-password?token=${resetToken}`;
@@ -194,7 +204,9 @@ let AuthService = class AuthService {
         catch (e) {
             console.error('Failed to send reset email:', e.message);
         }
-        return { message: 'If an account with that email exists, we sent a password reset link.' };
+        return {
+            message: 'If an account with that email exists, we sent a password reset link.',
+        };
     }
     async resetPassword(dto) {
         try {
@@ -209,7 +221,9 @@ let AuthService = class AuthService {
             const salt = await bcrypt.genSalt(10);
             user.password = await bcrypt.hash(dto.newPassword, salt);
             await user.save();
-            return { message: 'Password has been reset successfully. You can now sign in.' };
+            return {
+                message: 'Password has been reset successfully. You can now sign in.',
+            };
         }
         catch (e) {
             if (e instanceof common_1.BadRequestException)

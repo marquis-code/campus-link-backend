@@ -46,10 +46,15 @@ let NotificationsService = NotificationsService_1 = class NotificationsService {
         });
         this.notificationsGateway.sendUnreadCount(userId, unreadCount);
         if (data.sendEmail && data.emailAddress) {
-            this.mailService.sendMail(data.emailAddress, `CampusLink: ${data.title}`, this.buildNotificationEmail(data.title, data.message)).catch(() => { });
+            this.mailService
+                .sendMail(data.emailAddress, `CampusLink: ${data.title}`, this.buildNotificationEmail(data.title, data.message))
+                .catch(() => { });
         }
-        else if (!this.notificationsGateway.isUserOnline(userId) && data.emailAddress) {
-            this.mailService.sendMail(data.emailAddress, `CampusLink: ${data.title}`, this.buildNotificationEmail(data.title, data.message)).catch(() => { });
+        else if (!this.notificationsGateway.isUserOnline(userId) &&
+            data.emailAddress) {
+            this.mailService
+                .sendMail(data.emailAddress, `CampusLink: ${data.title}`, this.buildNotificationEmail(data.title, data.message))
+                .catch(() => { });
         }
         this.logger.log(`Notification sent to ${userId}: ${data.title}`);
         return notification;
@@ -129,7 +134,10 @@ let NotificationsService = NotificationsService_1 = class NotificationsService {
     async findByUser(userId, page = 1, limit = 20) {
         const skip = (page - 1) * limit;
         const filter = { user: new mongoose_2.Types.ObjectId(userId) };
-        const unreadFilter = { user: new mongoose_2.Types.ObjectId(userId), isRead: false };
+        const unreadFilter = {
+            user: new mongoose_2.Types.ObjectId(userId),
+            isRead: false,
+        };
         const [notifications, total, unreadCount] = await Promise.all([
             this.notificationModel
                 .find(filter)
@@ -140,7 +148,13 @@ let NotificationsService = NotificationsService_1 = class NotificationsService {
             this.notificationModel.countDocuments(filter),
             this.notificationModel.countDocuments(unreadFilter),
         ]);
-        return { notifications, total, unreadCount, page, pages: Math.ceil(total / limit) };
+        return {
+            notifications,
+            total,
+            unreadCount,
+            page,
+            pages: Math.ceil(total / limit),
+        };
     }
     async markAsRead(notificationId, userId) {
         const result = await this.notificationModel.findOneAndUpdate({ _id: notificationId, user: new mongoose_2.Types.ObjectId(userId) }, { isRead: true }, { new: true });
